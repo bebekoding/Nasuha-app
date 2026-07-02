@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
 import '../../../core/extensions/date_extensions.dart';
-import '../../../models/muhasabah_entry.dart';
 import '../../../models/user_settings.dart';
 import '../../../services/database/app_database.dart';
 import '../../../services/isar/isar_service.dart';
@@ -19,7 +17,8 @@ class PrayerNotificationScheduler {
 
   final PrayerRepository _prayer;
   final NotificationService _notif;
-  final IsarService _isarService;
+  // ignore: unused_field
+  final IsarService _isarService; // legacy — retained via constructor
   final AppDatabase _db;
 
   Future<void> scheduleNext48h() async {
@@ -95,10 +94,9 @@ class PrayerNotificationScheduler {
   }
 
   Future<bool> _isLogged(String dateKey, String slug) async {
-    final entries = await _isarService.isar.muhasabahEntrys
-        .filter()
-        .dateKeyEqualTo(dateKey)
-        .findAll();
+    final entries = await (_db.select(_db.muhasabahEntriesTable)
+          ..where((t) => t.dateKey.equals(dateKey)))
+        .get();
     return entries.any((e) => e.tagSlug == slug);
   }
 

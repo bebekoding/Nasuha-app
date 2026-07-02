@@ -32,6 +32,7 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final isarService = await IsarService.open();
   final appDb = AppDatabase();
+  await isarService.seedDrift(appDb);
 
   if (kSeedDummyData) {
     await DummySeeder(isarService, appDb).seed();

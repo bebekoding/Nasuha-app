@@ -1,67 +1,95 @@
 import 'dart:math';
 
+import 'package:drift/drift.dart'
+    show OrderingMode, OrderingTerm, Value, countAll;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
 import '../../../../core/extensions/date_extensions.dart';
 import '../../../../models/daily_score.dart';
 import '../../../../models/muhasabah_entry.dart';
 import '../../../../models/muhasabah_tag.dart';
 import '../../../../models/streak.dart';
-import '../../../../services/isar/isar_service.dart';
+import '../../../../services/database/app_database.dart';
 import '../../../achievements/data/achievement_engine.dart';
 
 class MuhasabahRepository {
-  MuhasabahRepository(this._service, this._achievements);
+  MuhasabahRepository(this._db, this._achievements);
 
-  final IsarService _service;
+  final AppDatabase _db;
   final AchievementEngine _achievements;
-  Isar get _isar => _service.isar;
 
   // ---- Tags ----
-  Future<List<MuhasabahTag>> allTags() =>
-      _isar.muhasabahTags.where().sortByScoreDesc().findAll();
 
-  Stream<List<MuhasabahTag>> watchTags() =>
-      _isar.muhasabahTags.where().watch(fireImmediately: true);
+  Future<List<MuhasabahTag>> allTags() async {
+    final rows = await (_db.select(_db.muhasabahTagsTable)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.score, mode: OrderingMode.desc)
+          ]))
+        .get();
+    return rows.map(_tagFromRow).toList();
+  }
+
+  Stream<List<MuhasabahTag>> watchTags() {
+    return _db
+        .select(_db.muhasabahTagsTable)
+        .watch()
+        .map((rows) => rows.map(_tagFromRow).toList());
+  }
 
   Future<void> addCustomTag({
     required String name,
     required int score,
     required TagKind kind,
   }) async {
-    final tag = MuhasabahTag.create(
-      slug: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
-      score: score,
-      kind: kind,
-      isDefault: false,
-    );
-    await _isar.writeTxn(() => _isar.muhasabahTags.put(tag));
+    await _db.into(_db.muhasabahTagsTable).insert(
+          MuhasabahTagsTableCompanion.insert(
+            slug: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+            name: name,
+            score: score,
+            kind: Value(kind.name),
+            isDefault: const Value(false),
+            createdAt: DateTime.now(),
+          ),
+        );
   }
 
-  Future<void> deleteTag(int id) =>
-      _isar.writeTxn(() => _isar.muhasabahTags.delete(id));
+  Future<void> deleteTag(int id) async {
+    await (_db.delete(_db.muhasabahTagsTable)
+          ..where((t) => t.id.equals(id)))
+        .go();
+  }
+
+  Future<MuhasabahTag?> tagBySlug(String slug) async {
+    final row = await (_db.select(_db.muhasabahTagsTable)
+          ..where((t) => t.slug.equals(slug))
+          ..limit(1))
+        .getSingleOrNull();
+    return row == null ? null : _tagFromRow(row);
+  }
 
   // ---- Entries ----
+
   Future<void> addEntry(MuhasabahTag tag, {String? note}) async {
     final now = DateTime.now();
-    final entry = MuhasabahEntry()
-      ..dateKey = now.isoDate
-      ..createdAt = now
-      ..tagSlug = tag.slug
-      ..tagName = tag.name
-      ..tagScore = tag.score
-      ..kind = tag.kind
-      ..note = note;
+    final dateKey = now.isoDate;
 
-    await _isar.writeTxn(() async {
-      await _isar.muhasabahEntrys.put(entry);
-      await _recalcDailyScore(now.isoDate);
+    await _db.transaction(() async {
+      await _db.into(_db.muhasabahEntriesTable).insert(
+            MuhasabahEntriesTableCompanion.insert(
+              dateKey: dateKey,
+              createdAt: now,
+              tagSlug: tag.slug,
+              tagName: tag.name,
+              tagScore: tag.score,
+              kind: tag.kind.name,
+              note: Value(note),
+            ),
+          );
+      await _recalcDailyScore(dateKey);
       await _updateStreak(now);
     });
     if (_prayerSlugs.contains(tag.slug)) {
-      await autoSyncMissedPrayers(now.isoDate);
+      await autoSyncMissedPrayers(dateKey);
     }
     await _achievements.recomputeAll();
   }
@@ -75,28 +103,35 @@ class MuhasabahRepository {
   /// so using a feature rewards the matching amalan without duplicating points.
   Future<void> autoLogOncePerDay(String slug) async {
     final dateKey = DateTime.now().isoDate;
-    final todays =
-        await _isar.muhasabahEntrys.filter().dateKeyEqualTo(dateKey).findAll();
+    final todays = await (_db.select(_db.muhasabahEntriesTable)
+          ..where((t) => t.dateKey.equals(dateKey)))
+        .get();
     if (todays.any((e) => e.tagSlug == slug)) return;
-    final tag =
-        await _isar.muhasabahTags.filter().slugEqualTo(slug).findFirst();
+    final tag = await tagBySlug(slug);
     if (tag == null) return;
     await addEntry(tag, note: autoFeatureNote);
   }
 
-  Future<void> resetAllData() => _isar.writeTxn(() async {
-        await _isar.muhasabahEntrys.clear();
-        await _isar.dailyScores.clear();
-        await _isar.streaks.clear();
-      });
+  Future<void> resetAllData() async {
+    await _db.transaction(() async {
+      await _db.delete(_db.muhasabahEntriesTable).go();
+      await _db.delete(_db.dailyScoresTable).go();
+      await _db.delete(_db.streaksTable).go();
+    });
+  }
 
   Future<void> deleteEntry(int id) async {
-    final entry = await _isar.muhasabahEntrys.get(id);
+    final entry = await (_db.select(_db.muhasabahEntriesTable)
+          ..where((t) => t.id.equals(id))
+          ..limit(1))
+        .getSingleOrNull();
     if (entry == null) return;
     final dateKey = entry.dateKey;
     final isPrayer = _prayerSlugs.contains(entry.tagSlug);
-    await _isar.writeTxn(() async {
-      await _isar.muhasabahEntrys.delete(id);
+    await _db.transaction(() async {
+      await (_db.delete(_db.muhasabahEntriesTable)
+            ..where((t) => t.id.equals(id)))
+          .go();
       await _recalcDailyScore(dateKey);
     });
     if (isPrayer) {
@@ -106,47 +141,60 @@ class MuhasabahRepository {
   }
 
   Stream<List<MuhasabahEntry>> watchEntriesForDate(DateTime date) {
-    return _isar.muhasabahEntrys
-        .filter()
-        .dateKeyEqualTo(date.isoDate)
-        .sortByCreatedAtDesc()
-        .watch(fireImmediately: true);
+    return (_db.select(_db.muhasabahEntriesTable)
+          ..where((t) => t.dateKey.equals(date.isoDate))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)
+          ]))
+        .watch()
+        .map((rows) => rows.map(_entryFromRow).toList());
   }
 
-  Stream<List<MuhasabahEntry>> watchAllEntries() => _isar.muhasabahEntrys
-      .where()
-      .sortByCreatedAtDesc()
-      .watch(fireImmediately: true);
+  Stream<List<MuhasabahEntry>> watchAllEntries() {
+    return (_db.select(_db.muhasabahEntriesTable)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)
+          ]))
+        .watch()
+        .map((rows) => rows.map(_entryFromRow).toList());
+  }
 
   // ---- Daily score ----
+
   Stream<DailyScore?> watchDailyScore(DateTime date) {
-    return _isar.dailyScores
-        .filter()
-        .dateKeyEqualTo(date.isoDate)
-        .watch(fireImmediately: true)
-        .map((list) => list.isEmpty ? null : list.first);
+    return (_db.select(_db.dailyScoresTable)
+          ..where((t) => t.dateKey.equals(date.isoDate))
+          ..limit(1))
+        .watch()
+        .map((rows) => rows.isEmpty ? null : _scoreFromRow(rows.first));
   }
 
   Future<DailyScore?> getDailyScore(DateTime date) async {
-    final list = await _isar.dailyScores
-        .filter()
-        .dateKeyEqualTo(date.isoDate)
-        .findAll();
-    return list.isEmpty ? null : list.first;
+    final row = await (_db.select(_db.dailyScoresTable)
+          ..where((t) => t.dateKey.equals(date.isoDate))
+          ..limit(1))
+        .getSingleOrNull();
+    return row == null ? null : _scoreFromRow(row);
   }
 
-  Future<List<DailyScore>> scoresInRange(DateTime from, DateTime to) {
-    return _isar.dailyScores
-        .filter()
-        .dateKeyBetween(from.isoDate, to.isoDate)
-        .sortByDateKey()
-        .findAll();
+  Future<List<DailyScore>> scoresInRange(DateTime from, DateTime to) async {
+    final fromKey = from.isoDate;
+    final toKey = to.isoDate;
+    final rows = await (_db.select(_db.dailyScoresTable)
+          ..orderBy([(t) => OrderingTerm(expression: t.dateKey)]))
+        .get();
+    // Filter di Dart — kunci lexicographic ordering aman untuk yyyy-MM-dd;
+    // dataset tak besar sehingga acceptable.
+    return rows
+        .where((r) => r.dateKey.compareTo(fromKey) >= 0 &&
+            r.dateKey.compareTo(toKey) <= 0)
+        .map(_scoreFromRow)
+        .toList();
   }
 
   /// For each given tagSlug, the set of dateKeys (yyyy-MM-dd) it was logged on.
-  /// Used by analytics to compute per-habit streaks.
   Future<Map<String, Set<String>>> habitDatesBySlug(Set<String> slugs) async {
-    final entries = await _isar.muhasabahEntrys.where().findAll();
+    final entries = await _db.select(_db.muhasabahEntriesTable).get();
     final map = {for (final s in slugs) s: <String>{}};
     for (final e in entries) {
       map[e.tagSlug]?.add(e.dateKey);
@@ -154,27 +202,25 @@ class MuhasabahRepository {
     return map;
   }
 
-  /// Total number of distinct days the user has logged anything.
-  Future<int> totalMuhasabahDays() => _isar.dailyScores.count();
+  Future<int> totalMuhasabahDays() async {
+    final query = _db.selectOnly(_db.dailyScoresTable)..addColumns([countAll()]);
+    return (await query.map((r) => r.read(countAll())).getSingle()) ?? 0;
+  }
 
-  /// Lifetime sum of all daily scores.
   Future<int> lifetimeScore() async {
-    final all = await _isar.dailyScores.where().findAll();
-    return all.fold<int>(0, (s, d) => s + d.total);
+    final rows = await _db.select(_db.dailyScoresTable).get();
+    return rows.fold<int>(0, (s, d) => s + d.total);
   }
 
   Future<void> _recalcDailyScore(String dateKey) async {
-    final entries = await _isar.muhasabahEntrys
-        .filter()
-        .dateKeyEqualTo(dateKey)
-        .findAll();
+    final entries = await (_db.select(_db.muhasabahEntriesTable)
+          ..where((t) => t.dateKey.equals(dateKey)))
+        .get();
 
     if (entries.isEmpty) {
-      final existing = await _isar.dailyScores
-          .filter()
-          .dateKeyEqualTo(dateKey)
-          .findFirst();
-      if (existing != null) await _isar.dailyScores.delete(existing.id);
+      await (_db.delete(_db.dailyScoresTable)
+            ..where((t) => t.dateKey.equals(dateKey)))
+          .go();
       return;
     }
 
@@ -183,23 +229,22 @@ class MuhasabahRepository {
     int neg = 0;
     for (final e in entries) {
       total += e.tagScore;
-      if (e.kind == TagKind.positive) {
+      if (e.kind == TagKind.positive.name) {
         pos++;
       } else {
         neg++;
       }
     }
 
-    final existing =
-        await _isar.dailyScores.filter().dateKeyEqualTo(dateKey).findFirst();
-    final score = existing ?? DailyScore()
-      ..dateKey = dateKey;
-    score
-      ..total = total
-      ..positiveCount = pos
-      ..negativeCount = neg
-      ..updatedAt = DateTime.now();
-    await _isar.dailyScores.put(score);
+    await _db.into(_db.dailyScoresTable).insertOnConflictUpdate(
+          DailyScoresTableCompanion.insert(
+            dateKey: dateKey,
+            total: total,
+            positiveCount: pos,
+            negativeCount: neg,
+            updatedAt: DateTime.now(),
+          ),
+        );
   }
 
   // ---- Missed-prayer auto-sync ----
@@ -214,14 +259,10 @@ class MuhasabahRepository {
   static const _missedSlug = 'tidak_sholat_fardu';
   static const _autoNote = '__auto__';
 
-  /// Ensures the number of auto-generated "tidak_sholat_fardu" entries for
-  /// [dateKey] matches (5 − prayers completed that day).
-  /// Manual entries (note ≠ __auto__) are never touched.
   Future<void> autoSyncMissedPrayers(String dateKey) async {
-    final all = await _isar.muhasabahEntrys
-        .filter()
-        .dateKeyEqualTo(dateKey)
-        .findAll();
+    final all = await (_db.select(_db.muhasabahEntriesTable)
+          ..where((t) => t.dateKey.equals(dateKey)))
+        .get();
 
     final prayersDone = all
         .where((e) => _prayerSlugs.contains(e.tagSlug))
@@ -236,30 +277,31 @@ class MuhasabahRepository {
 
     if (autoEntries.length == target) return;
 
-    final tag = await _isar.muhasabahTags
-        .filter()
-        .slugEqualTo(_missedSlug)
-        .findFirst();
+    final tag = await tagBySlug(_missedSlug);
     if (tag == null) return;
 
-    await _isar.writeTxn(() async {
+    await _db.transaction(() async {
       if (autoEntries.length > target) {
-        // Remove excess (oldest first)
+        // Remove excess (oldest first — rows returned by select tanpa order
+        // biasanya sesuai insert order; ini heuristik yang cukup baik).
         for (var i = 0; i < autoEntries.length - target; i++) {
-          await _isar.muhasabahEntrys.delete(autoEntries[i].id);
+          await (_db.delete(_db.muhasabahEntriesTable)
+                ..where((t) => t.id.equals(autoEntries[i].id)))
+              .go();
         }
       } else {
-        // Add missing
         for (var i = 0; i < target - autoEntries.length; i++) {
-          final entry = MuhasabahEntry()
-            ..dateKey = dateKey
-            ..createdAt = DateTime.now()
-            ..tagSlug = tag.slug
-            ..tagName = tag.name
-            ..tagScore = tag.score
-            ..kind = TagKind.negative
-            ..note = _autoNote;
-          await _isar.muhasabahEntrys.put(entry);
+          await _db.into(_db.muhasabahEntriesTable).insert(
+                MuhasabahEntriesTableCompanion.insert(
+                  dateKey: dateKey,
+                  createdAt: DateTime.now(),
+                  tagSlug: tag.slug,
+                  tagName: tag.name,
+                  tagScore: tag.score,
+                  kind: TagKind.negative.name,
+                  note: const Value(_autoNote),
+                ),
+              );
         }
       }
       await _recalcDailyScore(dateKey);
@@ -267,14 +309,14 @@ class MuhasabahRepository {
   }
 
   // ---- Streak ----
+
   Future<Streak> getMuhasabahStreak() async {
-    final existing =
-        await _isar.streaks.filter().keyEqualTo('muhasabah').findFirst();
-    return existing ?? (Streak()
-      ..key = 'muhasabah'
-      ..current = 0
-      ..longest = 0
-      ..lastDateKey = '');
+    final row = await (_db.select(_db.streaksTable)
+          ..where((t) => t.key.equals('muhasabah'))
+          ..limit(1))
+        .getSingleOrNull();
+    if (row != null) return _streakFromRow(row);
+    return Streak(key: 'muhasabah');
   }
 
   Future<void> _updateStreak(DateTime now) async {
@@ -292,13 +334,64 @@ class MuhasabahRepository {
       streak.longest = streak.current;
     }
     streak.lastDateKey = today;
-    await _isar.streaks.put(streak);
+
+    await _db.into(_db.streaksTable).insertOnConflictUpdate(
+          StreaksTableCompanion.insert(
+            key: streak.key,
+            current: streak.current,
+            longest: streak.longest,
+            lastDateKey: streak.lastDateKey,
+          ),
+        );
   }
+
+  // ---- Row → domain mappers ----
+
+  MuhasabahTag _tagFromRow(MuhasabahTagRow r) => MuhasabahTag(
+        id: r.id,
+        slug: r.slug,
+        name: r.name,
+        score: r.score,
+        kind:
+            r.kind == 'negative' ? TagKind.negative : TagKind.positive,
+        iconCodePoint: r.iconCodePoint,
+        isDefault: r.isDefault,
+        createdAt: r.createdAt,
+      );
+
+  MuhasabahEntry _entryFromRow(MuhasabahEntryRow r) => MuhasabahEntry(
+        id: r.id,
+        dateKey: r.dateKey,
+        createdAt: r.createdAt,
+        tagSlug: r.tagSlug,
+        tagName: r.tagName,
+        tagScore: r.tagScore,
+        kind:
+            r.kind == 'negative' ? TagKind.negative : TagKind.positive,
+        note: r.note,
+      );
+
+  DailyScore _scoreFromRow(DailyScoreRow r) => DailyScore(
+        id: r.id,
+        dateKey: r.dateKey,
+        total: r.total,
+        positiveCount: r.positiveCount,
+        negativeCount: r.negativeCount,
+        updatedAt: r.updatedAt,
+      );
+
+  Streak _streakFromRow(StreakRow r) => Streak(
+        id: r.id,
+        key: r.key,
+        current: r.current,
+        longest: r.longest,
+        lastDateKey: r.lastDateKey,
+      );
 }
 
 final muhasabahRepositoryProvider = Provider<MuhasabahRepository>((ref) {
   return MuhasabahRepository(
-    ref.watch(isarServiceProvider),
+    ref.watch(appDatabaseProvider),
     ref.watch(achievementEngineProvider),
   );
 });

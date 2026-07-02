@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:drift/drift.dart' show countAll;
 
-import '../../models/muhasabah_entry.dart';
 import '../database/app_database.dart';
 import '../isar/isar_service.dart';
 import 'backup_crypto.dart';
@@ -32,7 +31,8 @@ class BackupService {
         _crypto = crypto ?? BackupCrypto();
 
 
-  final IsarService _isar;
+  // ignore: unused_field
+  final IsarService _isar; // legacy Isar; masih dipakai serializer via constructor
   final AppDatabase _db;
   final BackupSerializer _serializer;
   final DriveBackupClient _drive;
@@ -42,7 +42,11 @@ class BackupService {
   /// charity records). Used to decide whether a fresh sign-in on a new device
   /// should offer to restore a cloud backup.
   Future<bool> hasLocalData() async {
-    final entries = await _isar.isar.muhasabahEntrys.count();
+    final entriesQuery = _db.selectOnly(_db.muhasabahEntriesTable)
+      ..addColumns([countAll()]);
+    final entries =
+        (await entriesQuery.map((row) => row.read(countAll())).getSingle()) ??
+            0;
     final charityQuery = _db.selectOnly(_db.charityRecordsTable)
       ..addColumns([countAll()]);
     final charity =

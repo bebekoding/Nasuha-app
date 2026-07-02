@@ -1,29 +1,30 @@
-import 'package:isar/isar.dart';
-
 import 'muhasabah_tag.dart';
 
-part 'muhasabah_entry.g.dart';
+export 'muhasabah_tag.dart' show TagKind;
 
-@collection
+/// Catatan muhasabah harian — plain Dart (menggantikan @collection Isar).
 class MuhasabahEntry {
-  Id id = Isar.autoIncrement;
+  MuhasabahEntry({
+    this.id = 0,
+    this.dateKey = '',
+    DateTime? createdAt,
+    this.tagSlug = '',
+    this.tagName = '',
+    this.tagScore = 0,
+    this.kind = TagKind.positive,
+    this.note,
+  }) : createdAt = createdAt ?? DateTime.now();
 
-  /// Date bucket in yyyy-MM-dd form, indexed for fast aggregation.
-  @Index()
-  late String dateKey;
+  int id;
+  String dateKey;
+  DateTime createdAt;
 
-  late DateTime createdAt;
-
-  /// Snapshot of tag slug at time of entry — so future tag edits/removal don't
-  /// distort history.
-  late String tagSlug;
-  late String tagName;
-  late int tagScore;
-
-  @Enumerated(EnumType.name)
-  late TagKind kind;
+  /// Snapshot slug/name/score/kind saat entry dibuat — supaya edit tag tak
+  /// mengganggu histori.
+  String tagSlug;
+  String tagName;
+  int tagScore;
+  TagKind kind;
 
   String? note;
-
-  MuhasabahEntry();
 }

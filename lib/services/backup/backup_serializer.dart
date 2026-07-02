@@ -5,11 +5,7 @@ import 'package:isar/isar.dart';
 
 import '../../models/achievement.dart';
 import '../../models/charity_record.dart';
-import '../../models/daily_score.dart';
-import '../../models/muhasabah_entry.dart';
-import '../../models/muhasabah_tag.dart';
 import '../../models/quran_bookmark.dart';
-import '../../models/streak.dart';
 import '../../models/user_settings.dart';
 import '../database/app_database.dart';
 
@@ -56,25 +52,25 @@ class BackupSerializer {
   }
 
   Future<BackupPayload> _buildPayload() async {
-    final tags = await isar.muhasabahTags.where().findAll();
-    final entries = await isar.muhasabahEntrys.where().findAll();
-    final scores = await isar.dailyScores.where().findAll();
+    final tagRows = await db.select(db.muhasabahTagsTable).get();
+    final entryRows = await db.select(db.muhasabahEntriesTable).get();
+    final scoreRows = await db.select(db.dailyScoresTable).get();
     final charityRows = await db.select(db.charityRecordsTable).get();
     final charity = charityRows.map(_charityFromRow).toList();
+    final streakRows = await db.select(db.streaksTable).get();
     final achievements = await isar.achievements.where().findAll();
-    final streaks = await isar.streaks.where().findAll();
     final bookmarks = await isar.quranBookmarks.where().findAll();
     final settingsRow =
         await db.select(db.userSettingsTable).getSingleOrNull();
     final settings = settingsRow == null ? null : _settingsFromRow(settingsRow);
 
     final collections = <String, List<Map<String, dynamic>>>{
-      'muhasabahTags': tags.map(_tagToJson).toList(),
-      'muhasabahEntries': entries.map(_entryToJson).toList(),
-      'dailyScores': scores.map(_scoreToJson).toList(),
+      'muhasabahTags': tagRows.map(_tagFromRowToJson).toList(),
+      'muhasabahEntries': entryRows.map(_entryFromRowToJson).toList(),
+      'dailyScores': scoreRows.map(_scoreFromRowToJson).toList(),
       'charityRecords': charity.map(_charityToJson).toList(),
       'achievements': achievements.map(_achievementToJson).toList(),
-      'streaks': streaks.map(_streakToJson).toList(),
+      'streaks': streakRows.map(_streakFromRowToJson).toList(),
       'quranBookmarks': bookmarks.map(_bookmarkToJson).toList(),
     };
     if (settings != null) {
@@ -98,33 +94,73 @@ class BackupSerializer {
           'Mohon perbarui aplikasi terlebih dahulu.');
     }
     await isar.writeTxn(() async {
-      // Wipe (but keep cached surahs to avoid redownload).
-      await isar.muhasabahTags.clear();
-      await isar.muhasabahEntrys.clear();
-      await isar.dailyScores.clear();
-      // charity_records dipindah ke Drift — dihapus di luar tx Isar.
+      // Yang masih Isar: achievements + quranBookmarks (bookmark schema masih
+      // orphan; data quran bookmark aktif di Drift, tapi legacy Isar tabel
+      // ada untuk import backup lama).
       await isar.achievements.clear();
-      await isar.streaks.clear();
       await isar.quranBookmarks.clear();
 
-      for (final m in payload.collections['muhasabahTags'] ?? const []) {
-        await isar.muhasabahTags.put(_tagFromJson(m));
-      }
-      for (final m in payload.collections['muhasabahEntries'] ?? const []) {
-        await isar.muhasabahEntrys.put(_entryFromJson(m));
-      }
-      for (final m in payload.collections['dailyScores'] ?? const []) {
-        await isar.dailyScores.put(_scoreFromJson(m));
-      }
-      // charity_records: dipindah ke Drift (proses di luar tx Isar).
       for (final m in payload.collections['achievements'] ?? const []) {
         await isar.achievements.put(_achievementFromJson(m));
       }
-      for (final m in payload.collections['streaks'] ?? const []) {
-        await isar.streaks.put(_streakFromJson(m));
-      }
       for (final m in payload.collections['quranBookmarks'] ?? const []) {
         await isar.quranBookmarks.put(_bookmarkFromJson(m));
+      }
+    });
+
+    // Muhasabah tags/entries/scores/streaks kini di Drift.
+    await db.transaction(() async {
+      await db.delete(db.muhasabahEntriesTable).go();
+      await db.delete(db.dailyScoresTable).go();
+      await db.delete(db.streaksTable).go();
+      await db.delete(db.muhasabahTagsTable).go();
+
+      for (final m in payload.collections['muhasabahTags'] ?? const []) {
+        await db.into(db.muhasabahTagsTable).insertOnConflictUpdate(
+              MuhasabahTagsTableCompanion.insert(
+                slug: m['slug'] as String,
+                name: m['name'] as String,
+                score: m['score'] as int,
+                kind: Value(m['kind'] as String? ?? 'positive'),
+                iconCodePoint: Value(m['iconCodePoint'] as int?),
+                isDefault: Value((m['isDefault'] as bool?) ?? false),
+                createdAt: DateTime.parse(m['createdAt'] as String),
+              ),
+            );
+      }
+      for (final m in payload.collections['muhasabahEntries'] ?? const []) {
+        await db.into(db.muhasabahEntriesTable).insert(
+              MuhasabahEntriesTableCompanion.insert(
+                dateKey: m['dateKey'] as String,
+                createdAt: DateTime.parse(m['createdAt'] as String),
+                tagSlug: m['tagSlug'] as String,
+                tagName: m['tagName'] as String,
+                tagScore: m['tagScore'] as int,
+                kind: m['kind'] as String? ?? 'positive',
+                note: Value(m['note'] as String?),
+              ),
+            );
+      }
+      for (final m in payload.collections['dailyScores'] ?? const []) {
+        await db.into(db.dailyScoresTable).insertOnConflictUpdate(
+              DailyScoresTableCompanion.insert(
+                dateKey: m['dateKey'] as String,
+                total: m['total'] as int,
+                positiveCount: m['positiveCount'] as int,
+                negativeCount: m['negativeCount'] as int,
+                updatedAt: DateTime.parse(m['updatedAt'] as String),
+              ),
+            );
+      }
+      for (final m in payload.collections['streaks'] ?? const []) {
+        await db.into(db.streaksTable).insertOnConflictUpdate(
+              StreaksTableCompanion.insert(
+                key: m['key'] as String,
+                current: m['current'] as int,
+                longest: m['longest'] as int,
+                lastDateKey: m['lastDateKey'] as String,
+              ),
+            );
       }
     });
 
@@ -179,59 +215,42 @@ class BackupSerializer {
         lastSyncAt: r.lastSyncAt,
       );
 
-  // ----- mappers -----
-  Map<String, dynamic> _tagToJson(MuhasabahTag t) => {
-        'slug': t.slug,
-        'name': t.name,
-        'score': t.score,
-        'kind': t.kind.name,
-        'iconCodePoint': t.iconCodePoint,
-        'isDefault': t.isDefault,
-        'createdAt': t.createdAt.toIso8601String(),
+  // ----- mappers (Drift rows) -----
+
+  Map<String, dynamic> _tagFromRowToJson(MuhasabahTagRow r) => {
+        'slug': r.slug,
+        'name': r.name,
+        'score': r.score,
+        'kind': r.kind,
+        'iconCodePoint': r.iconCodePoint,
+        'isDefault': r.isDefault,
+        'createdAt': r.createdAt.toIso8601String(),
       };
 
-  MuhasabahTag _tagFromJson(Map<String, dynamic> j) => MuhasabahTag()
-    ..slug = j['slug'] as String
-    ..name = j['name'] as String
-    ..score = j['score'] as int
-    ..kind = TagKind.values.byName(j['kind'] as String)
-    ..iconCodePoint = j['iconCodePoint'] as int?
-    ..isDefault = (j['isDefault'] as bool?) ?? false
-    ..createdAt = DateTime.parse(j['createdAt'] as String);
-
-  Map<String, dynamic> _entryToJson(MuhasabahEntry e) => {
-        'dateKey': e.dateKey,
-        'createdAt': e.createdAt.toIso8601String(),
-        'tagSlug': e.tagSlug,
-        'tagName': e.tagName,
-        'tagScore': e.tagScore,
-        'kind': e.kind.name,
-        'note': e.note,
+  Map<String, dynamic> _entryFromRowToJson(MuhasabahEntryRow r) => {
+        'dateKey': r.dateKey,
+        'createdAt': r.createdAt.toIso8601String(),
+        'tagSlug': r.tagSlug,
+        'tagName': r.tagName,
+        'tagScore': r.tagScore,
+        'kind': r.kind,
+        'note': r.note,
       };
 
-  MuhasabahEntry _entryFromJson(Map<String, dynamic> j) => MuhasabahEntry()
-    ..dateKey = j['dateKey'] as String
-    ..createdAt = DateTime.parse(j['createdAt'] as String)
-    ..tagSlug = j['tagSlug'] as String
-    ..tagName = j['tagName'] as String
-    ..tagScore = j['tagScore'] as int
-    ..kind = TagKind.values.byName(j['kind'] as String)
-    ..note = j['note'] as String?;
-
-  Map<String, dynamic> _scoreToJson(DailyScore s) => {
-        'dateKey': s.dateKey,
-        'total': s.total,
-        'positiveCount': s.positiveCount,
-        'negativeCount': s.negativeCount,
-        'updatedAt': s.updatedAt.toIso8601String(),
+  Map<String, dynamic> _scoreFromRowToJson(DailyScoreRow r) => {
+        'dateKey': r.dateKey,
+        'total': r.total,
+        'positiveCount': r.positiveCount,
+        'negativeCount': r.negativeCount,
+        'updatedAt': r.updatedAt.toIso8601String(),
       };
 
-  DailyScore _scoreFromJson(Map<String, dynamic> j) => DailyScore()
-    ..dateKey = j['dateKey'] as String
-    ..total = j['total'] as int
-    ..positiveCount = j['positiveCount'] as int
-    ..negativeCount = j['negativeCount'] as int
-    ..updatedAt = DateTime.parse(j['updatedAt'] as String);
+  Map<String, dynamic> _streakFromRowToJson(StreakRow r) => {
+        'key': r.key,
+        'current': r.current,
+        'longest': r.longest,
+        'lastDateKey': r.lastDateKey,
+      };
 
   Map<String, dynamic> _charityToJson(CharityRecord r) => {
         'dateKey': r.dateKey,
@@ -276,19 +295,6 @@ class BackupSerializer {
     ..unlockedAt = j['unlockedAt'] == null
         ? null
         : DateTime.parse(j['unlockedAt'] as String);
-
-  Map<String, dynamic> _streakToJson(Streak s) => {
-        'key': s.key,
-        'current': s.current,
-        'longest': s.longest,
-        'lastDateKey': s.lastDateKey,
-      };
-
-  Streak _streakFromJson(Map<String, dynamic> j) => Streak()
-    ..key = j['key'] as String
-    ..current = j['current'] as int
-    ..longest = j['longest'] as int
-    ..lastDateKey = j['lastDateKey'] as String;
 
   Map<String, dynamic> _bookmarkToJson(QuranBookmark b) => {
         'surahNumber': b.surahNumber,

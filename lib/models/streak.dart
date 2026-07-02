@@ -1,17 +1,18 @@
-import 'package:isar/isar.dart';
-
-part 'streak.g.dart';
-
-@collection
+/// Streak (hari beruntun) untuk kategori tertentu — mis. 'muhasabah'.
+///
+/// Plain Dart — persisted via tabel Drift `StreaksTable`. `key` unik.
 class Streak {
-  Id id = Isar.autoIncrement;
+  Streak({
+    this.id = 0,
+    this.key = '',
+    this.current = 0,
+    this.longest = 0,
+    this.lastDateKey = '',
+  });
 
-  @Index(unique: true, replace: true)
-  late String key; // 'muhasabah', 'prayer', etc.
-
-  late int current;
-  late int longest;
-  late String lastDateKey;
-
-  Streak();
+  int id;
+  String key;
+  int current;
+  int longest;
+  String lastDateKey;
 }

@@ -1612,6 +1612,1772 @@ class CharityRecordsTableCompanion extends UpdateCompanion<CharityRecordRow> {
   }
 }
 
+class $MuhasabahTagsTableTable extends MuhasabahTagsTable
+    with TableInfo<$MuhasabahTagsTableTable, MuhasabahTagRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MuhasabahTagsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _slugMeta = const VerificationMeta('slug');
+  @override
+  late final GeneratedColumn<String> slug = GeneratedColumn<String>(
+    'slug',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scoreMeta = const VerificationMeta('score');
+  @override
+  late final GeneratedColumn<int> score = GeneratedColumn<int>(
+    'score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('positive'),
+  );
+  static const VerificationMeta _iconCodePointMeta = const VerificationMeta(
+    'iconCodePoint',
+  );
+  @override
+  late final GeneratedColumn<int> iconCodePoint = GeneratedColumn<int>(
+    'icon_code_point',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    slug,
+    name,
+    score,
+    kind,
+    iconCodePoint,
+    isDefault,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'muhasabah_tags';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MuhasabahTagRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('slug')) {
+      context.handle(
+        _slugMeta,
+        slug.isAcceptableOrUnknown(data['slug']!, _slugMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_slugMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('score')) {
+      context.handle(
+        _scoreMeta,
+        score.isAcceptableOrUnknown(data['score']!, _scoreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scoreMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('icon_code_point')) {
+      context.handle(
+        _iconCodePointMeta,
+        iconCodePoint.isAcceptableOrUnknown(
+          data['icon_code_point']!,
+          _iconCodePointMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MuhasabahTagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MuhasabahTagRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      slug: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slug'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      score: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}score'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      iconCodePoint: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}icon_code_point'],
+      ),
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $MuhasabahTagsTableTable createAlias(String alias) {
+    return $MuhasabahTagsTableTable(attachedDatabase, alias);
+  }
+}
+
+class MuhasabahTagRow extends DataClass implements Insertable<MuhasabahTagRow> {
+  final int id;
+  final String slug;
+  final String name;
+  final int score;
+  final String kind;
+  final int? iconCodePoint;
+  final bool isDefault;
+  final DateTime createdAt;
+  const MuhasabahTagRow({
+    required this.id,
+    required this.slug,
+    required this.name,
+    required this.score,
+    required this.kind,
+    this.iconCodePoint,
+    required this.isDefault,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['slug'] = Variable<String>(slug);
+    map['name'] = Variable<String>(name);
+    map['score'] = Variable<int>(score);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || iconCodePoint != null) {
+      map['icon_code_point'] = Variable<int>(iconCodePoint);
+    }
+    map['is_default'] = Variable<bool>(isDefault);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  MuhasabahTagsTableCompanion toCompanion(bool nullToAbsent) {
+    return MuhasabahTagsTableCompanion(
+      id: Value(id),
+      slug: Value(slug),
+      name: Value(name),
+      score: Value(score),
+      kind: Value(kind),
+      iconCodePoint: iconCodePoint == null && nullToAbsent
+          ? const Value.absent()
+          : Value(iconCodePoint),
+      isDefault: Value(isDefault),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory MuhasabahTagRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MuhasabahTagRow(
+      id: serializer.fromJson<int>(json['id']),
+      slug: serializer.fromJson<String>(json['slug']),
+      name: serializer.fromJson<String>(json['name']),
+      score: serializer.fromJson<int>(json['score']),
+      kind: serializer.fromJson<String>(json['kind']),
+      iconCodePoint: serializer.fromJson<int?>(json['iconCodePoint']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'slug': serializer.toJson<String>(slug),
+      'name': serializer.toJson<String>(name),
+      'score': serializer.toJson<int>(score),
+      'kind': serializer.toJson<String>(kind),
+      'iconCodePoint': serializer.toJson<int?>(iconCodePoint),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  MuhasabahTagRow copyWith({
+    int? id,
+    String? slug,
+    String? name,
+    int? score,
+    String? kind,
+    Value<int?> iconCodePoint = const Value.absent(),
+    bool? isDefault,
+    DateTime? createdAt,
+  }) => MuhasabahTagRow(
+    id: id ?? this.id,
+    slug: slug ?? this.slug,
+    name: name ?? this.name,
+    score: score ?? this.score,
+    kind: kind ?? this.kind,
+    iconCodePoint: iconCodePoint.present
+        ? iconCodePoint.value
+        : this.iconCodePoint,
+    isDefault: isDefault ?? this.isDefault,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  MuhasabahTagRow copyWithCompanion(MuhasabahTagsTableCompanion data) {
+    return MuhasabahTagRow(
+      id: data.id.present ? data.id.value : this.id,
+      slug: data.slug.present ? data.slug.value : this.slug,
+      name: data.name.present ? data.name.value : this.name,
+      score: data.score.present ? data.score.value : this.score,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      iconCodePoint: data.iconCodePoint.present
+          ? data.iconCodePoint.value
+          : this.iconCodePoint,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MuhasabahTagRow(')
+          ..write('id: $id, ')
+          ..write('slug: $slug, ')
+          ..write('name: $name, ')
+          ..write('score: $score, ')
+          ..write('kind: $kind, ')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    slug,
+    name,
+    score,
+    kind,
+    iconCodePoint,
+    isDefault,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MuhasabahTagRow &&
+          other.id == this.id &&
+          other.slug == this.slug &&
+          other.name == this.name &&
+          other.score == this.score &&
+          other.kind == this.kind &&
+          other.iconCodePoint == this.iconCodePoint &&
+          other.isDefault == this.isDefault &&
+          other.createdAt == this.createdAt);
+}
+
+class MuhasabahTagsTableCompanion extends UpdateCompanion<MuhasabahTagRow> {
+  final Value<int> id;
+  final Value<String> slug;
+  final Value<String> name;
+  final Value<int> score;
+  final Value<String> kind;
+  final Value<int?> iconCodePoint;
+  final Value<bool> isDefault;
+  final Value<DateTime> createdAt;
+  const MuhasabahTagsTableCompanion({
+    this.id = const Value.absent(),
+    this.slug = const Value.absent(),
+    this.name = const Value.absent(),
+    this.score = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.iconCodePoint = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  MuhasabahTagsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String slug,
+    required String name,
+    required int score,
+    this.kind = const Value.absent(),
+    this.iconCodePoint = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    required DateTime createdAt,
+  }) : slug = Value(slug),
+       name = Value(name),
+       score = Value(score),
+       createdAt = Value(createdAt);
+  static Insertable<MuhasabahTagRow> custom({
+    Expression<int>? id,
+    Expression<String>? slug,
+    Expression<String>? name,
+    Expression<int>? score,
+    Expression<String>? kind,
+    Expression<int>? iconCodePoint,
+    Expression<bool>? isDefault,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (slug != null) 'slug': slug,
+      if (name != null) 'name': name,
+      if (score != null) 'score': score,
+      if (kind != null) 'kind': kind,
+      if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
+      if (isDefault != null) 'is_default': isDefault,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  MuhasabahTagsTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? slug,
+    Value<String>? name,
+    Value<int>? score,
+    Value<String>? kind,
+    Value<int?>? iconCodePoint,
+    Value<bool>? isDefault,
+    Value<DateTime>? createdAt,
+  }) {
+    return MuhasabahTagsTableCompanion(
+      id: id ?? this.id,
+      slug: slug ?? this.slug,
+      name: name ?? this.name,
+      score: score ?? this.score,
+      kind: kind ?? this.kind,
+      iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      isDefault: isDefault ?? this.isDefault,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (slug.present) {
+      map['slug'] = Variable<String>(slug.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (score.present) {
+      map['score'] = Variable<int>(score.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (iconCodePoint.present) {
+      map['icon_code_point'] = Variable<int>(iconCodePoint.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MuhasabahTagsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('slug: $slug, ')
+          ..write('name: $name, ')
+          ..write('score: $score, ')
+          ..write('kind: $kind, ')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MuhasabahEntriesTableTable extends MuhasabahEntriesTable
+    with TableInfo<$MuhasabahEntriesTableTable, MuhasabahEntryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MuhasabahEntriesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dateKeyMeta = const VerificationMeta(
+    'dateKey',
+  );
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+    'date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tagSlugMeta = const VerificationMeta(
+    'tagSlug',
+  );
+  @override
+  late final GeneratedColumn<String> tagSlug = GeneratedColumn<String>(
+    'tag_slug',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tagNameMeta = const VerificationMeta(
+    'tagName',
+  );
+  @override
+  late final GeneratedColumn<String> tagName = GeneratedColumn<String>(
+    'tag_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tagScoreMeta = const VerificationMeta(
+    'tagScore',
+  );
+  @override
+  late final GeneratedColumn<int> tagScore = GeneratedColumn<int>(
+    'tag_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dateKey,
+    createdAt,
+    tagSlug,
+    tagName,
+    tagScore,
+    kind,
+    note,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'muhasabah_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MuhasabahEntryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date_key')) {
+      context.handle(
+        _dateKeyMeta,
+        dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('tag_slug')) {
+      context.handle(
+        _tagSlugMeta,
+        tagSlug.isAcceptableOrUnknown(data['tag_slug']!, _tagSlugMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tagSlugMeta);
+    }
+    if (data.containsKey('tag_name')) {
+      context.handle(
+        _tagNameMeta,
+        tagName.isAcceptableOrUnknown(data['tag_name']!, _tagNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tagNameMeta);
+    }
+    if (data.containsKey('tag_score')) {
+      context.handle(
+        _tagScoreMeta,
+        tagScore.isAcceptableOrUnknown(data['tag_score']!, _tagScoreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tagScoreMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MuhasabahEntryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MuhasabahEntryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      dateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      tagSlug: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tag_slug'],
+      )!,
+      tagName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tag_name'],
+      )!,
+      tagScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tag_score'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+    );
+  }
+
+  @override
+  $MuhasabahEntriesTableTable createAlias(String alias) {
+    return $MuhasabahEntriesTableTable(attachedDatabase, alias);
+  }
+}
+
+class MuhasabahEntryRow extends DataClass
+    implements Insertable<MuhasabahEntryRow> {
+  final int id;
+  final String dateKey;
+  final DateTime createdAt;
+  final String tagSlug;
+  final String tagName;
+  final int tagScore;
+  final String kind;
+  final String? note;
+  const MuhasabahEntryRow({
+    required this.id,
+    required this.dateKey,
+    required this.createdAt,
+    required this.tagSlug,
+    required this.tagName,
+    required this.tagScore,
+    required this.kind,
+    this.note,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date_key'] = Variable<String>(dateKey);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['tag_slug'] = Variable<String>(tagSlug);
+    map['tag_name'] = Variable<String>(tagName);
+    map['tag_score'] = Variable<int>(tagScore);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    return map;
+  }
+
+  MuhasabahEntriesTableCompanion toCompanion(bool nullToAbsent) {
+    return MuhasabahEntriesTableCompanion(
+      id: Value(id),
+      dateKey: Value(dateKey),
+      createdAt: Value(createdAt),
+      tagSlug: Value(tagSlug),
+      tagName: Value(tagName),
+      tagScore: Value(tagScore),
+      kind: Value(kind),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+    );
+  }
+
+  factory MuhasabahEntryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MuhasabahEntryRow(
+      id: serializer.fromJson<int>(json['id']),
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      tagSlug: serializer.fromJson<String>(json['tagSlug']),
+      tagName: serializer.fromJson<String>(json['tagName']),
+      tagScore: serializer.fromJson<int>(json['tagScore']),
+      kind: serializer.fromJson<String>(json['kind']),
+      note: serializer.fromJson<String?>(json['note']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'dateKey': serializer.toJson<String>(dateKey),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'tagSlug': serializer.toJson<String>(tagSlug),
+      'tagName': serializer.toJson<String>(tagName),
+      'tagScore': serializer.toJson<int>(tagScore),
+      'kind': serializer.toJson<String>(kind),
+      'note': serializer.toJson<String?>(note),
+    };
+  }
+
+  MuhasabahEntryRow copyWith({
+    int? id,
+    String? dateKey,
+    DateTime? createdAt,
+    String? tagSlug,
+    String? tagName,
+    int? tagScore,
+    String? kind,
+    Value<String?> note = const Value.absent(),
+  }) => MuhasabahEntryRow(
+    id: id ?? this.id,
+    dateKey: dateKey ?? this.dateKey,
+    createdAt: createdAt ?? this.createdAt,
+    tagSlug: tagSlug ?? this.tagSlug,
+    tagName: tagName ?? this.tagName,
+    tagScore: tagScore ?? this.tagScore,
+    kind: kind ?? this.kind,
+    note: note.present ? note.value : this.note,
+  );
+  MuhasabahEntryRow copyWithCompanion(MuhasabahEntriesTableCompanion data) {
+    return MuhasabahEntryRow(
+      id: data.id.present ? data.id.value : this.id,
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      tagSlug: data.tagSlug.present ? data.tagSlug.value : this.tagSlug,
+      tagName: data.tagName.present ? data.tagName.value : this.tagName,
+      tagScore: data.tagScore.present ? data.tagScore.value : this.tagScore,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      note: data.note.present ? data.note.value : this.note,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MuhasabahEntryRow(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('tagSlug: $tagSlug, ')
+          ..write('tagName: $tagName, ')
+          ..write('tagScore: $tagScore, ')
+          ..write('kind: $kind, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    dateKey,
+    createdAt,
+    tagSlug,
+    tagName,
+    tagScore,
+    kind,
+    note,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MuhasabahEntryRow &&
+          other.id == this.id &&
+          other.dateKey == this.dateKey &&
+          other.createdAt == this.createdAt &&
+          other.tagSlug == this.tagSlug &&
+          other.tagName == this.tagName &&
+          other.tagScore == this.tagScore &&
+          other.kind == this.kind &&
+          other.note == this.note);
+}
+
+class MuhasabahEntriesTableCompanion
+    extends UpdateCompanion<MuhasabahEntryRow> {
+  final Value<int> id;
+  final Value<String> dateKey;
+  final Value<DateTime> createdAt;
+  final Value<String> tagSlug;
+  final Value<String> tagName;
+  final Value<int> tagScore;
+  final Value<String> kind;
+  final Value<String?> note;
+  const MuhasabahEntriesTableCompanion({
+    this.id = const Value.absent(),
+    this.dateKey = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.tagSlug = const Value.absent(),
+    this.tagName = const Value.absent(),
+    this.tagScore = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.note = const Value.absent(),
+  });
+  MuhasabahEntriesTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String dateKey,
+    required DateTime createdAt,
+    required String tagSlug,
+    required String tagName,
+    required int tagScore,
+    required String kind,
+    this.note = const Value.absent(),
+  }) : dateKey = Value(dateKey),
+       createdAt = Value(createdAt),
+       tagSlug = Value(tagSlug),
+       tagName = Value(tagName),
+       tagScore = Value(tagScore),
+       kind = Value(kind);
+  static Insertable<MuhasabahEntryRow> custom({
+    Expression<int>? id,
+    Expression<String>? dateKey,
+    Expression<DateTime>? createdAt,
+    Expression<String>? tagSlug,
+    Expression<String>? tagName,
+    Expression<int>? tagScore,
+    Expression<String>? kind,
+    Expression<String>? note,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dateKey != null) 'date_key': dateKey,
+      if (createdAt != null) 'created_at': createdAt,
+      if (tagSlug != null) 'tag_slug': tagSlug,
+      if (tagName != null) 'tag_name': tagName,
+      if (tagScore != null) 'tag_score': tagScore,
+      if (kind != null) 'kind': kind,
+      if (note != null) 'note': note,
+    });
+  }
+
+  MuhasabahEntriesTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? dateKey,
+    Value<DateTime>? createdAt,
+    Value<String>? tagSlug,
+    Value<String>? tagName,
+    Value<int>? tagScore,
+    Value<String>? kind,
+    Value<String?>? note,
+  }) {
+    return MuhasabahEntriesTableCompanion(
+      id: id ?? this.id,
+      dateKey: dateKey ?? this.dateKey,
+      createdAt: createdAt ?? this.createdAt,
+      tagSlug: tagSlug ?? this.tagSlug,
+      tagName: tagName ?? this.tagName,
+      tagScore: tagScore ?? this.tagScore,
+      kind: kind ?? this.kind,
+      note: note ?? this.note,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (tagSlug.present) {
+      map['tag_slug'] = Variable<String>(tagSlug.value);
+    }
+    if (tagName.present) {
+      map['tag_name'] = Variable<String>(tagName.value);
+    }
+    if (tagScore.present) {
+      map['tag_score'] = Variable<int>(tagScore.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MuhasabahEntriesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('tagSlug: $tagSlug, ')
+          ..write('tagName: $tagName, ')
+          ..write('tagScore: $tagScore, ')
+          ..write('kind: $kind, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DailyScoresTableTable extends DailyScoresTable
+    with TableInfo<$DailyScoresTableTable, DailyScoreRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyScoresTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dateKeyMeta = const VerificationMeta(
+    'dateKey',
+  );
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+    'date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<int> total = GeneratedColumn<int>(
+    'total',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positiveCountMeta = const VerificationMeta(
+    'positiveCount',
+  );
+  @override
+  late final GeneratedColumn<int> positiveCount = GeneratedColumn<int>(
+    'positive_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _negativeCountMeta = const VerificationMeta(
+    'negativeCount',
+  );
+  @override
+  late final GeneratedColumn<int> negativeCount = GeneratedColumn<int>(
+    'negative_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dateKey,
+    total,
+    positiveCount,
+    negativeCount,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_scores';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyScoreRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date_key')) {
+      context.handle(
+        _dateKeyMeta,
+        dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalMeta);
+    }
+    if (data.containsKey('positive_count')) {
+      context.handle(
+        _positiveCountMeta,
+        positiveCount.isAcceptableOrUnknown(
+          data['positive_count']!,
+          _positiveCountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_positiveCountMeta);
+    }
+    if (data.containsKey('negative_count')) {
+      context.handle(
+        _negativeCountMeta,
+        negativeCount.isAcceptableOrUnknown(
+          data['negative_count']!,
+          _negativeCountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_negativeCountMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DailyScoreRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyScoreRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      dateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_key'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total'],
+      )!,
+      positiveCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}positive_count'],
+      )!,
+      negativeCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}negative_count'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DailyScoresTableTable createAlias(String alias) {
+    return $DailyScoresTableTable(attachedDatabase, alias);
+  }
+}
+
+class DailyScoreRow extends DataClass implements Insertable<DailyScoreRow> {
+  final int id;
+  final String dateKey;
+  final int total;
+  final int positiveCount;
+  final int negativeCount;
+  final DateTime updatedAt;
+  const DailyScoreRow({
+    required this.id,
+    required this.dateKey,
+    required this.total,
+    required this.positiveCount,
+    required this.negativeCount,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date_key'] = Variable<String>(dateKey);
+    map['total'] = Variable<int>(total);
+    map['positive_count'] = Variable<int>(positiveCount);
+    map['negative_count'] = Variable<int>(negativeCount);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DailyScoresTableCompanion toCompanion(bool nullToAbsent) {
+    return DailyScoresTableCompanion(
+      id: Value(id),
+      dateKey: Value(dateKey),
+      total: Value(total),
+      positiveCount: Value(positiveCount),
+      negativeCount: Value(negativeCount),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DailyScoreRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyScoreRow(
+      id: serializer.fromJson<int>(json['id']),
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      total: serializer.fromJson<int>(json['total']),
+      positiveCount: serializer.fromJson<int>(json['positiveCount']),
+      negativeCount: serializer.fromJson<int>(json['negativeCount']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'dateKey': serializer.toJson<String>(dateKey),
+      'total': serializer.toJson<int>(total),
+      'positiveCount': serializer.toJson<int>(positiveCount),
+      'negativeCount': serializer.toJson<int>(negativeCount),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DailyScoreRow copyWith({
+    int? id,
+    String? dateKey,
+    int? total,
+    int? positiveCount,
+    int? negativeCount,
+    DateTime? updatedAt,
+  }) => DailyScoreRow(
+    id: id ?? this.id,
+    dateKey: dateKey ?? this.dateKey,
+    total: total ?? this.total,
+    positiveCount: positiveCount ?? this.positiveCount,
+    negativeCount: negativeCount ?? this.negativeCount,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DailyScoreRow copyWithCompanion(DailyScoresTableCompanion data) {
+    return DailyScoreRow(
+      id: data.id.present ? data.id.value : this.id,
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      total: data.total.present ? data.total.value : this.total,
+      positiveCount: data.positiveCount.present
+          ? data.positiveCount.value
+          : this.positiveCount,
+      negativeCount: data.negativeCount.present
+          ? data.negativeCount.value
+          : this.negativeCount,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyScoreRow(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('total: $total, ')
+          ..write('positiveCount: $positiveCount, ')
+          ..write('negativeCount: $negativeCount, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, dateKey, total, positiveCount, negativeCount, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyScoreRow &&
+          other.id == this.id &&
+          other.dateKey == this.dateKey &&
+          other.total == this.total &&
+          other.positiveCount == this.positiveCount &&
+          other.negativeCount == this.negativeCount &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DailyScoresTableCompanion extends UpdateCompanion<DailyScoreRow> {
+  final Value<int> id;
+  final Value<String> dateKey;
+  final Value<int> total;
+  final Value<int> positiveCount;
+  final Value<int> negativeCount;
+  final Value<DateTime> updatedAt;
+  const DailyScoresTableCompanion({
+    this.id = const Value.absent(),
+    this.dateKey = const Value.absent(),
+    this.total = const Value.absent(),
+    this.positiveCount = const Value.absent(),
+    this.negativeCount = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  DailyScoresTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String dateKey,
+    required int total,
+    required int positiveCount,
+    required int negativeCount,
+    required DateTime updatedAt,
+  }) : dateKey = Value(dateKey),
+       total = Value(total),
+       positiveCount = Value(positiveCount),
+       negativeCount = Value(negativeCount),
+       updatedAt = Value(updatedAt);
+  static Insertable<DailyScoreRow> custom({
+    Expression<int>? id,
+    Expression<String>? dateKey,
+    Expression<int>? total,
+    Expression<int>? positiveCount,
+    Expression<int>? negativeCount,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dateKey != null) 'date_key': dateKey,
+      if (total != null) 'total': total,
+      if (positiveCount != null) 'positive_count': positiveCount,
+      if (negativeCount != null) 'negative_count': negativeCount,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  DailyScoresTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? dateKey,
+    Value<int>? total,
+    Value<int>? positiveCount,
+    Value<int>? negativeCount,
+    Value<DateTime>? updatedAt,
+  }) {
+    return DailyScoresTableCompanion(
+      id: id ?? this.id,
+      dateKey: dateKey ?? this.dateKey,
+      total: total ?? this.total,
+      positiveCount: positiveCount ?? this.positiveCount,
+      negativeCount: negativeCount ?? this.negativeCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<int>(total.value);
+    }
+    if (positiveCount.present) {
+      map['positive_count'] = Variable<int>(positiveCount.value);
+    }
+    if (negativeCount.present) {
+      map['negative_count'] = Variable<int>(negativeCount.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyScoresTableCompanion(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('total: $total, ')
+          ..write('positiveCount: $positiveCount, ')
+          ..write('negativeCount: $negativeCount, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StreaksTableTable extends StreaksTable
+    with TableInfo<$StreaksTableTable, StreakRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StreaksTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _currentMeta = const VerificationMeta(
+    'current',
+  );
+  @override
+  late final GeneratedColumn<int> current = GeneratedColumn<int>(
+    'current',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longestMeta = const VerificationMeta(
+    'longest',
+  );
+  @override
+  late final GeneratedColumn<int> longest = GeneratedColumn<int>(
+    'longest',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastDateKeyMeta = const VerificationMeta(
+    'lastDateKey',
+  );
+  @override
+  late final GeneratedColumn<String> lastDateKey = GeneratedColumn<String>(
+    'last_date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    key,
+    current,
+    longest,
+    lastDateKey,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'streaks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StreakRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('current')) {
+      context.handle(
+        _currentMeta,
+        current.isAcceptableOrUnknown(data['current']!, _currentMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_currentMeta);
+    }
+    if (data.containsKey('longest')) {
+      context.handle(
+        _longestMeta,
+        longest.isAcceptableOrUnknown(data['longest']!, _longestMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longestMeta);
+    }
+    if (data.containsKey('last_date_key')) {
+      context.handle(
+        _lastDateKeyMeta,
+        lastDateKey.isAcceptableOrUnknown(
+          data['last_date_key']!,
+          _lastDateKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastDateKeyMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StreakRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StreakRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      current: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}current'],
+      )!,
+      longest: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}longest'],
+      )!,
+      lastDateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_date_key'],
+      )!,
+    );
+  }
+
+  @override
+  $StreaksTableTable createAlias(String alias) {
+    return $StreaksTableTable(attachedDatabase, alias);
+  }
+}
+
+class StreakRow extends DataClass implements Insertable<StreakRow> {
+  final int id;
+  final String key;
+  final int current;
+  final int longest;
+  final String lastDateKey;
+  const StreakRow({
+    required this.id,
+    required this.key,
+    required this.current,
+    required this.longest,
+    required this.lastDateKey,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['key'] = Variable<String>(key);
+    map['current'] = Variable<int>(current);
+    map['longest'] = Variable<int>(longest);
+    map['last_date_key'] = Variable<String>(lastDateKey);
+    return map;
+  }
+
+  StreaksTableCompanion toCompanion(bool nullToAbsent) {
+    return StreaksTableCompanion(
+      id: Value(id),
+      key: Value(key),
+      current: Value(current),
+      longest: Value(longest),
+      lastDateKey: Value(lastDateKey),
+    );
+  }
+
+  factory StreakRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StreakRow(
+      id: serializer.fromJson<int>(json['id']),
+      key: serializer.fromJson<String>(json['key']),
+      current: serializer.fromJson<int>(json['current']),
+      longest: serializer.fromJson<int>(json['longest']),
+      lastDateKey: serializer.fromJson<String>(json['lastDateKey']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'key': serializer.toJson<String>(key),
+      'current': serializer.toJson<int>(current),
+      'longest': serializer.toJson<int>(longest),
+      'lastDateKey': serializer.toJson<String>(lastDateKey),
+    };
+  }
+
+  StreakRow copyWith({
+    int? id,
+    String? key,
+    int? current,
+    int? longest,
+    String? lastDateKey,
+  }) => StreakRow(
+    id: id ?? this.id,
+    key: key ?? this.key,
+    current: current ?? this.current,
+    longest: longest ?? this.longest,
+    lastDateKey: lastDateKey ?? this.lastDateKey,
+  );
+  StreakRow copyWithCompanion(StreaksTableCompanion data) {
+    return StreakRow(
+      id: data.id.present ? data.id.value : this.id,
+      key: data.key.present ? data.key.value : this.key,
+      current: data.current.present ? data.current.value : this.current,
+      longest: data.longest.present ? data.longest.value : this.longest,
+      lastDateKey: data.lastDateKey.present
+          ? data.lastDateKey.value
+          : this.lastDateKey,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StreakRow(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('current: $current, ')
+          ..write('longest: $longest, ')
+          ..write('lastDateKey: $lastDateKey')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, key, current, longest, lastDateKey);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StreakRow &&
+          other.id == this.id &&
+          other.key == this.key &&
+          other.current == this.current &&
+          other.longest == this.longest &&
+          other.lastDateKey == this.lastDateKey);
+}
+
+class StreaksTableCompanion extends UpdateCompanion<StreakRow> {
+  final Value<int> id;
+  final Value<String> key;
+  final Value<int> current;
+  final Value<int> longest;
+  final Value<String> lastDateKey;
+  const StreaksTableCompanion({
+    this.id = const Value.absent(),
+    this.key = const Value.absent(),
+    this.current = const Value.absent(),
+    this.longest = const Value.absent(),
+    this.lastDateKey = const Value.absent(),
+  });
+  StreaksTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String key,
+    required int current,
+    required int longest,
+    required String lastDateKey,
+  }) : key = Value(key),
+       current = Value(current),
+       longest = Value(longest),
+       lastDateKey = Value(lastDateKey);
+  static Insertable<StreakRow> custom({
+    Expression<int>? id,
+    Expression<String>? key,
+    Expression<int>? current,
+    Expression<int>? longest,
+    Expression<String>? lastDateKey,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (key != null) 'key': key,
+      if (current != null) 'current': current,
+      if (longest != null) 'longest': longest,
+      if (lastDateKey != null) 'last_date_key': lastDateKey,
+    });
+  }
+
+  StreaksTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? key,
+    Value<int>? current,
+    Value<int>? longest,
+    Value<String>? lastDateKey,
+  }) {
+    return StreaksTableCompanion(
+      id: id ?? this.id,
+      key: key ?? this.key,
+      current: current ?? this.current,
+      longest: longest ?? this.longest,
+      lastDateKey: lastDateKey ?? this.lastDateKey,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (current.present) {
+      map['current'] = Variable<int>(current.value);
+    }
+    if (longest.present) {
+      map['longest'] = Variable<int>(longest.value);
+    }
+    if (lastDateKey.present) {
+      map['last_date_key'] = Variable<String>(lastDateKey.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StreaksTableCompanion(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('current: $current, ')
+          ..write('longest: $longest, ')
+          ..write('lastDateKey: $lastDateKey')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1620,9 +3386,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $UserSettingsTableTable(this);
   late final $CharityRecordsTableTable charityRecordsTable =
       $CharityRecordsTableTable(this);
+  late final $MuhasabahTagsTableTable muhasabahTagsTable =
+      $MuhasabahTagsTableTable(this);
+  late final $MuhasabahEntriesTableTable muhasabahEntriesTable =
+      $MuhasabahEntriesTableTable(this);
+  late final $DailyScoresTableTable dailyScoresTable = $DailyScoresTableTable(
+    this,
+  );
+  late final $StreaksTableTable streaksTable = $StreaksTableTable(this);
   late final Index idxCharityRecordsDateKey = Index(
     'idx_charity_records_date_key',
     'CREATE INDEX idx_charity_records_date_key ON charity_records (date_key)',
+  );
+  late final Index idxMuhasabahEntriesDateKey = Index(
+    'idx_muhasabah_entries_date_key',
+    'CREATE INDEX idx_muhasabah_entries_date_key ON muhasabah_entries (date_key)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -1632,7 +3410,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     quranBookmarks,
     userSettingsTable,
     charityRecordsTable,
+    muhasabahTagsTable,
+    muhasabahEntriesTable,
+    dailyScoresTable,
+    streaksTable,
     idxCharityRecordsDateKey,
+    idxMuhasabahEntriesDateKey,
   ];
 }
 
@@ -2461,6 +4244,958 @@ typedef $$CharityRecordsTableTableProcessedTableManager =
       CharityRecordRow,
       PrefetchHooks Function()
     >;
+typedef $$MuhasabahTagsTableTableCreateCompanionBuilder =
+    MuhasabahTagsTableCompanion Function({
+      Value<int> id,
+      required String slug,
+      required String name,
+      required int score,
+      Value<String> kind,
+      Value<int?> iconCodePoint,
+      Value<bool> isDefault,
+      required DateTime createdAt,
+    });
+typedef $$MuhasabahTagsTableTableUpdateCompanionBuilder =
+    MuhasabahTagsTableCompanion Function({
+      Value<int> id,
+      Value<String> slug,
+      Value<String> name,
+      Value<int> score,
+      Value<String> kind,
+      Value<int?> iconCodePoint,
+      Value<bool> isDefault,
+      Value<DateTime> createdAt,
+    });
+
+class $$MuhasabahTagsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $MuhasabahTagsTableTable> {
+  $$MuhasabahTagsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MuhasabahTagsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $MuhasabahTagsTableTable> {
+  $$MuhasabahTagsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MuhasabahTagsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MuhasabahTagsTableTable> {
+  $$MuhasabahTagsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get slug =>
+      $composableBuilder(column: $table.slug, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get score =>
+      $composableBuilder(column: $table.score, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$MuhasabahTagsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MuhasabahTagsTableTable,
+          MuhasabahTagRow,
+          $$MuhasabahTagsTableTableFilterComposer,
+          $$MuhasabahTagsTableTableOrderingComposer,
+          $$MuhasabahTagsTableTableAnnotationComposer,
+          $$MuhasabahTagsTableTableCreateCompanionBuilder,
+          $$MuhasabahTagsTableTableUpdateCompanionBuilder,
+          (
+            MuhasabahTagRow,
+            BaseReferences<
+              _$AppDatabase,
+              $MuhasabahTagsTableTable,
+              MuhasabahTagRow
+            >,
+          ),
+          MuhasabahTagRow,
+          PrefetchHooks Function()
+        > {
+  $$MuhasabahTagsTableTableTableManager(
+    _$AppDatabase db,
+    $MuhasabahTagsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MuhasabahTagsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MuhasabahTagsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MuhasabahTagsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> slug = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> score = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<int?> iconCodePoint = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => MuhasabahTagsTableCompanion(
+                id: id,
+                slug: slug,
+                name: name,
+                score: score,
+                kind: kind,
+                iconCodePoint: iconCodePoint,
+                isDefault: isDefault,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String slug,
+                required String name,
+                required int score,
+                Value<String> kind = const Value.absent(),
+                Value<int?> iconCodePoint = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                required DateTime createdAt,
+              }) => MuhasabahTagsTableCompanion.insert(
+                id: id,
+                slug: slug,
+                name: name,
+                score: score,
+                kind: kind,
+                iconCodePoint: iconCodePoint,
+                isDefault: isDefault,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MuhasabahTagsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MuhasabahTagsTableTable,
+      MuhasabahTagRow,
+      $$MuhasabahTagsTableTableFilterComposer,
+      $$MuhasabahTagsTableTableOrderingComposer,
+      $$MuhasabahTagsTableTableAnnotationComposer,
+      $$MuhasabahTagsTableTableCreateCompanionBuilder,
+      $$MuhasabahTagsTableTableUpdateCompanionBuilder,
+      (
+        MuhasabahTagRow,
+        BaseReferences<
+          _$AppDatabase,
+          $MuhasabahTagsTableTable,
+          MuhasabahTagRow
+        >,
+      ),
+      MuhasabahTagRow,
+      PrefetchHooks Function()
+    >;
+typedef $$MuhasabahEntriesTableTableCreateCompanionBuilder =
+    MuhasabahEntriesTableCompanion Function({
+      Value<int> id,
+      required String dateKey,
+      required DateTime createdAt,
+      required String tagSlug,
+      required String tagName,
+      required int tagScore,
+      required String kind,
+      Value<String?> note,
+    });
+typedef $$MuhasabahEntriesTableTableUpdateCompanionBuilder =
+    MuhasabahEntriesTableCompanion Function({
+      Value<int> id,
+      Value<String> dateKey,
+      Value<DateTime> createdAt,
+      Value<String> tagSlug,
+      Value<String> tagName,
+      Value<int> tagScore,
+      Value<String> kind,
+      Value<String?> note,
+    });
+
+class $$MuhasabahEntriesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $MuhasabahEntriesTableTable> {
+  $$MuhasabahEntriesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tagSlug => $composableBuilder(
+    column: $table.tagSlug,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tagName => $composableBuilder(
+    column: $table.tagName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tagScore => $composableBuilder(
+    column: $table.tagScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MuhasabahEntriesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $MuhasabahEntriesTableTable> {
+  $$MuhasabahEntriesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tagSlug => $composableBuilder(
+    column: $table.tagSlug,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tagName => $composableBuilder(
+    column: $table.tagName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tagScore => $composableBuilder(
+    column: $table.tagScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MuhasabahEntriesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MuhasabahEntriesTableTable> {
+  $$MuhasabahEntriesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get tagSlug =>
+      $composableBuilder(column: $table.tagSlug, builder: (column) => column);
+
+  GeneratedColumn<String> get tagName =>
+      $composableBuilder(column: $table.tagName, builder: (column) => column);
+
+  GeneratedColumn<int> get tagScore =>
+      $composableBuilder(column: $table.tagScore, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+}
+
+class $$MuhasabahEntriesTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MuhasabahEntriesTableTable,
+          MuhasabahEntryRow,
+          $$MuhasabahEntriesTableTableFilterComposer,
+          $$MuhasabahEntriesTableTableOrderingComposer,
+          $$MuhasabahEntriesTableTableAnnotationComposer,
+          $$MuhasabahEntriesTableTableCreateCompanionBuilder,
+          $$MuhasabahEntriesTableTableUpdateCompanionBuilder,
+          (
+            MuhasabahEntryRow,
+            BaseReferences<
+              _$AppDatabase,
+              $MuhasabahEntriesTableTable,
+              MuhasabahEntryRow
+            >,
+          ),
+          MuhasabahEntryRow,
+          PrefetchHooks Function()
+        > {
+  $$MuhasabahEntriesTableTableTableManager(
+    _$AppDatabase db,
+    $MuhasabahEntriesTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MuhasabahEntriesTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$MuhasabahEntriesTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$MuhasabahEntriesTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> dateKey = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String> tagSlug = const Value.absent(),
+                Value<String> tagName = const Value.absent(),
+                Value<int> tagScore = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+              }) => MuhasabahEntriesTableCompanion(
+                id: id,
+                dateKey: dateKey,
+                createdAt: createdAt,
+                tagSlug: tagSlug,
+                tagName: tagName,
+                tagScore: tagScore,
+                kind: kind,
+                note: note,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String dateKey,
+                required DateTime createdAt,
+                required String tagSlug,
+                required String tagName,
+                required int tagScore,
+                required String kind,
+                Value<String?> note = const Value.absent(),
+              }) => MuhasabahEntriesTableCompanion.insert(
+                id: id,
+                dateKey: dateKey,
+                createdAt: createdAt,
+                tagSlug: tagSlug,
+                tagName: tagName,
+                tagScore: tagScore,
+                kind: kind,
+                note: note,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MuhasabahEntriesTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MuhasabahEntriesTableTable,
+      MuhasabahEntryRow,
+      $$MuhasabahEntriesTableTableFilterComposer,
+      $$MuhasabahEntriesTableTableOrderingComposer,
+      $$MuhasabahEntriesTableTableAnnotationComposer,
+      $$MuhasabahEntriesTableTableCreateCompanionBuilder,
+      $$MuhasabahEntriesTableTableUpdateCompanionBuilder,
+      (
+        MuhasabahEntryRow,
+        BaseReferences<
+          _$AppDatabase,
+          $MuhasabahEntriesTableTable,
+          MuhasabahEntryRow
+        >,
+      ),
+      MuhasabahEntryRow,
+      PrefetchHooks Function()
+    >;
+typedef $$DailyScoresTableTableCreateCompanionBuilder =
+    DailyScoresTableCompanion Function({
+      Value<int> id,
+      required String dateKey,
+      required int total,
+      required int positiveCount,
+      required int negativeCount,
+      required DateTime updatedAt,
+    });
+typedef $$DailyScoresTableTableUpdateCompanionBuilder =
+    DailyScoresTableCompanion Function({
+      Value<int> id,
+      Value<String> dateKey,
+      Value<int> total,
+      Value<int> positiveCount,
+      Value<int> negativeCount,
+      Value<DateTime> updatedAt,
+    });
+
+class $$DailyScoresTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyScoresTableTable> {
+  $$DailyScoresTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get positiveCount => $composableBuilder(
+    column: $table.positiveCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get negativeCount => $composableBuilder(
+    column: $table.negativeCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DailyScoresTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyScoresTableTable> {
+  $$DailyScoresTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get positiveCount => $composableBuilder(
+    column: $table.positiveCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get negativeCount => $composableBuilder(
+    column: $table.negativeCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DailyScoresTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyScoresTableTable> {
+  $$DailyScoresTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<int> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get positiveCount => $composableBuilder(
+    column: $table.positiveCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get negativeCount => $composableBuilder(
+    column: $table.negativeCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DailyScoresTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyScoresTableTable,
+          DailyScoreRow,
+          $$DailyScoresTableTableFilterComposer,
+          $$DailyScoresTableTableOrderingComposer,
+          $$DailyScoresTableTableAnnotationComposer,
+          $$DailyScoresTableTableCreateCompanionBuilder,
+          $$DailyScoresTableTableUpdateCompanionBuilder,
+          (
+            DailyScoreRow,
+            BaseReferences<
+              _$AppDatabase,
+              $DailyScoresTableTable,
+              DailyScoreRow
+            >,
+          ),
+          DailyScoreRow,
+          PrefetchHooks Function()
+        > {
+  $$DailyScoresTableTableTableManager(
+    _$AppDatabase db,
+    $DailyScoresTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyScoresTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyScoresTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyScoresTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> dateKey = const Value.absent(),
+                Value<int> total = const Value.absent(),
+                Value<int> positiveCount = const Value.absent(),
+                Value<int> negativeCount = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => DailyScoresTableCompanion(
+                id: id,
+                dateKey: dateKey,
+                total: total,
+                positiveCount: positiveCount,
+                negativeCount: negativeCount,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String dateKey,
+                required int total,
+                required int positiveCount,
+                required int negativeCount,
+                required DateTime updatedAt,
+              }) => DailyScoresTableCompanion.insert(
+                id: id,
+                dateKey: dateKey,
+                total: total,
+                positiveCount: positiveCount,
+                negativeCount: negativeCount,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DailyScoresTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyScoresTableTable,
+      DailyScoreRow,
+      $$DailyScoresTableTableFilterComposer,
+      $$DailyScoresTableTableOrderingComposer,
+      $$DailyScoresTableTableAnnotationComposer,
+      $$DailyScoresTableTableCreateCompanionBuilder,
+      $$DailyScoresTableTableUpdateCompanionBuilder,
+      (
+        DailyScoreRow,
+        BaseReferences<_$AppDatabase, $DailyScoresTableTable, DailyScoreRow>,
+      ),
+      DailyScoreRow,
+      PrefetchHooks Function()
+    >;
+typedef $$StreaksTableTableCreateCompanionBuilder =
+    StreaksTableCompanion Function({
+      Value<int> id,
+      required String key,
+      required int current,
+      required int longest,
+      required String lastDateKey,
+    });
+typedef $$StreaksTableTableUpdateCompanionBuilder =
+    StreaksTableCompanion Function({
+      Value<int> id,
+      Value<String> key,
+      Value<int> current,
+      Value<int> longest,
+      Value<String> lastDateKey,
+    });
+
+class $$StreaksTableTableFilterComposer
+    extends Composer<_$AppDatabase, $StreaksTableTable> {
+  $$StreaksTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get current => $composableBuilder(
+    column: $table.current,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get longest => $composableBuilder(
+    column: $table.longest,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastDateKey => $composableBuilder(
+    column: $table.lastDateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StreaksTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $StreaksTableTable> {
+  $$StreaksTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get current => $composableBuilder(
+    column: $table.current,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get longest => $composableBuilder(
+    column: $table.longest,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastDateKey => $composableBuilder(
+    column: $table.lastDateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StreaksTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StreaksTableTable> {
+  $$StreaksTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<int> get current =>
+      $composableBuilder(column: $table.current, builder: (column) => column);
+
+  GeneratedColumn<int> get longest =>
+      $composableBuilder(column: $table.longest, builder: (column) => column);
+
+  GeneratedColumn<String> get lastDateKey => $composableBuilder(
+    column: $table.lastDateKey,
+    builder: (column) => column,
+  );
+}
+
+class $$StreaksTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StreaksTableTable,
+          StreakRow,
+          $$StreaksTableTableFilterComposer,
+          $$StreaksTableTableOrderingComposer,
+          $$StreaksTableTableAnnotationComposer,
+          $$StreaksTableTableCreateCompanionBuilder,
+          $$StreaksTableTableUpdateCompanionBuilder,
+          (
+            StreakRow,
+            BaseReferences<_$AppDatabase, $StreaksTableTable, StreakRow>,
+          ),
+          StreakRow,
+          PrefetchHooks Function()
+        > {
+  $$StreaksTableTableTableManager(_$AppDatabase db, $StreaksTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StreaksTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StreaksTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StreaksTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> key = const Value.absent(),
+                Value<int> current = const Value.absent(),
+                Value<int> longest = const Value.absent(),
+                Value<String> lastDateKey = const Value.absent(),
+              }) => StreaksTableCompanion(
+                id: id,
+                key: key,
+                current: current,
+                longest: longest,
+                lastDateKey: lastDateKey,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String key,
+                required int current,
+                required int longest,
+                required String lastDateKey,
+              }) => StreaksTableCompanion.insert(
+                id: id,
+                key: key,
+                current: current,
+                longest: longest,
+                lastDateKey: lastDateKey,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StreaksTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StreaksTableTable,
+      StreakRow,
+      $$StreaksTableTableFilterComposer,
+      $$StreaksTableTableOrderingComposer,
+      $$StreaksTableTableAnnotationComposer,
+      $$StreaksTableTableCreateCompanionBuilder,
+      $$StreaksTableTableUpdateCompanionBuilder,
+      (StreakRow, BaseReferences<_$AppDatabase, $StreaksTableTable, StreakRow>),
+      StreakRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2471,4 +5206,12 @@ class $AppDatabaseManager {
       $$UserSettingsTableTableTableManager(_db, _db.userSettingsTable);
   $$CharityRecordsTableTableTableManager get charityRecordsTable =>
       $$CharityRecordsTableTableTableManager(_db, _db.charityRecordsTable);
+  $$MuhasabahTagsTableTableTableManager get muhasabahTagsTable =>
+      $$MuhasabahTagsTableTableTableManager(_db, _db.muhasabahTagsTable);
+  $$MuhasabahEntriesTableTableTableManager get muhasabahEntriesTable =>
+      $$MuhasabahEntriesTableTableTableManager(_db, _db.muhasabahEntriesTable);
+  $$DailyScoresTableTableTableManager get dailyScoresTable =>
+      $$DailyScoresTableTableTableManager(_db, _db.dailyScoresTable);
+  $$StreaksTableTableTableManager get streaksTable =>
+      $$StreaksTableTableTableManager(_db, _db.streaksTable);
 }

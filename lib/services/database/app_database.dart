@@ -6,6 +6,10 @@ part 'app_database.g.dart';
 part 'tables/quran_bookmarks.dart';
 part 'tables/user_settings_table.dart';
 part 'tables/charity_records_table.dart';
+part 'tables/muhasabah_tags_table.dart';
+part 'tables/muhasabah_entries_table.dart';
+part 'tables/daily_scores_table.dart';
+part 'tables/streaks_table.dart';
 
 /// Database utama Nasuha (Drift) — menggantikan Isar bertahap untuk mendukung
 /// PWA (jalan di mobile via native sqlite dan di browser via sqlite-wasm).
@@ -15,10 +19,18 @@ part 'tables/charity_records_table.dart';
 ///   - QuranBookmarks
 ///   - UserSettingsTable (singleton, id=1)
 ///   - CharityRecordsTable
+///   - MuhasabahTagsTable, MuhasabahEntriesTable, DailyScoresTable, StreaksTable
 /// Belum dimigrasi (masih Isar):
-///   - MuhasabahTag, MuhasabahEntry, DailyScore, Streak,
-///     Achievement, CachedSurah
-@DriftDatabase(tables: [QuranBookmarks, UserSettingsTable, CharityRecordsTable])
+///   - Achievement, CachedSurah
+@DriftDatabase(tables: [
+  QuranBookmarks,
+  UserSettingsTable,
+  CharityRecordsTable,
+  MuhasabahTagsTable,
+  MuhasabahEntriesTable,
+  DailyScoresTable,
+  StreaksTable,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
 
@@ -26,7 +38,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -46,10 +58,16 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await m.createTable(charityRecordsTable);
-            // Indeks dateKey akan dibuat otomatis oleh createAll saat
-            // instalasi baru; untuk upgrade, index dilewati (query tetap
-            // jalan tanpa optimasi indeks — trade-off yang bisa diterima).
           }
+          if (from < 4) {
+            await m.createTable(muhasabahTagsTable);
+            await m.createTable(muhasabahEntriesTable);
+            await m.createTable(dailyScoresTable);
+            await m.createTable(streaksTable);
+          }
+          // Indeks dateKey akan dibuat otomatis via createAll saat instalasi
+          // baru; untuk upgrade dilewati (query tetap jalan tanpa indeks —
+          // trade-off yang bisa diterima).
         },
       );
 }

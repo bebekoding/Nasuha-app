@@ -1,16 +1,13 @@
 import 'dart:math' as math;
 import 'dart:ui' show DartPluginRegistrant;
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:isar/isar.dart';
 
 import '../../core/extensions/date_extensions.dart';
-import '../../models/daily_score.dart';
-import '../../models/muhasabah_entry.dart';
 import '../../models/muhasabah_tag.dart';
-import '../../models/streak.dart';
-import '../isar/isar_service.dart';
+import '../database/app_database.dart';
 
 /// Notification action id for the "✅ Sudah sholat" button.
 const kConfirmPrayerAction = 'confirm_prayer';
@@ -25,67 +22,71 @@ const _prayerSlugs = [
   'sholat_isya',
 ];
 
-/// Background isolate entry-point: fired when the user taps the confirm action
-/// while the app is not in the foreground. Marks the prayer as done directly
-/// in the database — no UI needed.
+/// Background isolate entry-point.
 @pragma('vm:entry-point')
 void prayerConfirmBackgroundHandler(NotificationResponse response) {
   if (response.actionId != kConfirmPrayerAction) return;
   handlePrayerConfirmPayload(response.payload);
 }
 
-/// Foreground handler — same logic when the app is open.
 void prayerConfirmForegroundHandler(NotificationResponse response) {
   if (response.actionId != kConfirmPrayerAction) return;
   handlePrayerConfirmPayload(response.payload);
 }
 
-/// Parses a `slug|dateKey` payload and logs the prayer. Safe to call from the
-/// foreground handler too.
+/// Parses a `slug|dateKey` payload dan mencatat sholat ke DB (Drift).
 Future<void> handlePrayerConfirmPayload(String? payload) async {
   if (payload == null || !payload.contains('|')) return;
   final parts = payload.split('|');
   if (parts.length != 2) return;
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
-  final isar = await IsarService.openForIsolate();
-  await logPrayerConfirmed(isar, parts[0], parts[1]);
+  // Open AppDatabase di isolate — drift_flutter handles path lookup.
+  final db = AppDatabase();
+  try {
+    await logPrayerConfirmed(db, parts[0], parts[1]);
+  } finally {
+    await db.close();
+  }
 }
 
-/// Adds the prayer entry for [dateKey] (once), then re-syncs the missed-prayer
-/// auto entries, the daily score, and the streak — all in one transaction.
 Future<void> logPrayerConfirmed(
-    Isar isar, String slug, String dateKey) async {
-  final todays =
-      await isar.muhasabahEntrys.filter().dateKeyEqualTo(dateKey).findAll();
-  if (todays.any((e) => e.tagSlug == slug)) return; // already done
-  final tag =
-      await isar.muhasabahTags.filter().slugEqualTo(slug).findFirst();
+    AppDatabase db, String slug, String dateKey) async {
+  final todays = await (db.select(db.muhasabahEntriesTable)
+        ..where((t) => t.dateKey.equals(dateKey)))
+      .get();
+  if (todays.any((e) => e.tagSlug == slug)) return; // already logged
+  final tag = await (db.select(db.muhasabahTagsTable)
+        ..where((t) => t.slug.equals(slug))
+        ..limit(1))
+      .getSingleOrNull();
   if (tag == null) return;
 
   final now = DateTime.now();
-  final entry = MuhasabahEntry()
-    ..dateKey = dateKey
-    ..createdAt = now
-    ..tagSlug = tag.slug
-    ..tagName = tag.name
-    ..tagScore = tag.score
-    ..kind = tag.kind
-    ..note = 'reminder';
-
-  await isar.writeTxn(() async {
-    await isar.muhasabahEntrys.put(entry);
-    await _syncMissedWithin(isar, dateKey);
-    await _recalcWithin(isar, dateKey);
-    await _updateStreakWithin(isar, now);
+  await db.transaction(() async {
+    await db.into(db.muhasabahEntriesTable).insert(
+          MuhasabahEntriesTableCompanion.insert(
+            dateKey: dateKey,
+            createdAt: now,
+            tagSlug: tag.slug,
+            tagName: tag.name,
+            tagScore: tag.score,
+            kind: tag.kind,
+            note: const Value('reminder'),
+          ),
+        );
+    await _syncMissedWithin(db, dateKey);
+    await _recalcWithin(db, dateKey);
+    await _updateStreakWithin(db, now);
   });
 }
 
-// ── Within-transaction helpers (no nested writeTxn) ───────────────────────
+// ── Within-transaction helpers ───────────────────────
 
-Future<void> _syncMissedWithin(Isar isar, String dateKey) async {
-  final all =
-      await isar.muhasabahEntrys.filter().dateKeyEqualTo(dateKey).findAll();
+Future<void> _syncMissedWithin(AppDatabase db, String dateKey) async {
+  final all = await (db.select(db.muhasabahEntriesTable)
+        ..where((t) => t.dateKey.equals(dateKey)))
+      .get();
   final prayersDone = all
       .where((e) => _prayerSlugs.contains(e.tagSlug))
       .map((e) => e.tagSlug)
@@ -100,67 +101,84 @@ Future<void> _syncMissedWithin(Isar isar, String dateKey) async {
 
   if (autoMissed.length > target) {
     for (var i = 0; i < autoMissed.length - target; i++) {
-      await isar.muhasabahEntrys.delete(autoMissed[i].id);
+      await (db.delete(db.muhasabahEntriesTable)
+            ..where((t) => t.id.equals(autoMissed[i].id)))
+          .go();
     }
   } else {
-    final tag =
-        await isar.muhasabahTags.filter().slugEqualTo(_missedSlug).findFirst();
+    final tag = await (db.select(db.muhasabahTagsTable)
+          ..where((t) => t.slug.equals(_missedSlug))
+          ..limit(1))
+        .getSingleOrNull();
     if (tag == null) return;
     for (var i = 0; i < target - autoMissed.length; i++) {
-      final e = MuhasabahEntry()
-        ..dateKey = dateKey
-        ..createdAt = DateTime.now()
-        ..tagSlug = tag.slug
-        ..tagName = tag.name
-        ..tagScore = tag.score
-        ..kind = TagKind.negative
-        ..note = _autoNote;
-      await isar.muhasabahEntrys.put(e);
+      await db.into(db.muhasabahEntriesTable).insert(
+            MuhasabahEntriesTableCompanion.insert(
+              dateKey: dateKey,
+              createdAt: DateTime.now(),
+              tagSlug: tag.slug,
+              tagName: tag.name,
+              tagScore: tag.score,
+              kind: TagKind.negative.name,
+              note: const Value(_autoNote),
+            ),
+          );
     }
   }
 }
 
-Future<void> _recalcWithin(Isar isar, String dateKey) async {
-  final entries =
-      await isar.muhasabahEntrys.filter().dateKeyEqualTo(dateKey).findAll();
-  final existing =
-      await isar.dailyScores.filter().dateKeyEqualTo(dateKey).findFirst();
+Future<void> _recalcWithin(AppDatabase db, String dateKey) async {
+  final entries = await (db.select(db.muhasabahEntriesTable)
+        ..where((t) => t.dateKey.equals(dateKey)))
+      .get();
 
   if (entries.isEmpty) {
-    if (existing != null) await isar.dailyScores.delete(existing.id);
+    await (db.delete(db.dailyScoresTable)
+          ..where((t) => t.dateKey.equals(dateKey)))
+        .go();
     return;
   }
 
   var total = 0, pos = 0, neg = 0;
   for (final e in entries) {
     total += e.tagScore;
-    if (e.kind == TagKind.positive) {
+    if (e.kind == TagKind.positive.name) {
       pos++;
     } else {
       neg++;
     }
   }
-  final score = existing ?? DailyScore()
-    ..dateKey = dateKey;
-  score
-    ..total = total
-    ..positiveCount = pos
-    ..negativeCount = neg;
-  await isar.dailyScores.put(score);
+  await db.into(db.dailyScoresTable).insertOnConflictUpdate(
+        DailyScoresTableCompanion.insert(
+          dateKey: dateKey,
+          total: total,
+          positiveCount: pos,
+          negativeCount: neg,
+          updatedAt: DateTime.now(),
+        ),
+      );
 }
 
-Future<void> _updateStreakWithin(Isar isar, DateTime now) async {
+Future<void> _updateStreakWithin(AppDatabase db, DateTime now) async {
   final today = now.isoDate;
-  final streak = await isar.streaks.filter().keyEqualTo('muhasabah').findFirst() ??
-      (Streak()
-        ..key = 'muhasabah'
-        ..current = 0
-        ..longest = 0
-        ..lastDateKey = '');
-  if (streak.lastDateKey == today) return;
+  final row = await (db.select(db.streaksTable)
+        ..where((t) => t.key.equals('muhasabah'))
+        ..limit(1))
+      .getSingleOrNull();
+  var current = row?.current ?? 0;
+  var longest = row?.longest ?? 0;
+  final lastDateKey = row?.lastDateKey ?? '';
+  if (lastDateKey == today) return;
   final yesterday = now.subtract(const Duration(days: 1)).isoDate;
-  streak.current = streak.lastDateKey == yesterday ? streak.current + 1 : 1;
-  streak.longest = math.max(streak.longest, streak.current);
-  streak.lastDateKey = today;
-  await isar.streaks.put(streak);
+  current = lastDateKey == yesterday ? current + 1 : 1;
+  longest = math.max(longest, current);
+
+  await db.into(db.streaksTable).insertOnConflictUpdate(
+        StreaksTableCompanion.insert(
+          key: 'muhasabah',
+          current: current,
+          longest: longest,
+          lastDateKey: today,
+        ),
+      );
 }

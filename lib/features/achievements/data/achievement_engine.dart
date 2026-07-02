@@ -3,7 +3,6 @@ import 'package:isar/isar.dart';
 
 import '../../../core/extensions/date_extensions.dart';
 import '../../../models/achievement.dart';
-import '../../../models/muhasabah_entry.dart';
 import '../../../services/database/app_database.dart';
 import '../../../services/isar/isar_service.dart';
 
@@ -31,7 +30,7 @@ class AchievementEngine {
     if (achievements.isEmpty) return;
 
     // Pre-fetch everything once; cheaper than 7 separate queries.
-    final entries = await _isar.muhasabahEntrys.where().findAll();
+    final entries = await _db.select(_db.muhasabahEntriesTable).get();
     final charityCount = await _db
         .customSelect('SELECT COUNT(*) AS c FROM charity_records')
         .map((row) => row.read<int>('c'))

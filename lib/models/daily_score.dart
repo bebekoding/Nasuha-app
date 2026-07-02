@@ -1,18 +1,21 @@
-import 'package:isar/isar.dart';
-
-part 'daily_score.g.dart';
-
-@collection
+/// Ringkasan skor harian (agregasi dari MuhasabahEntry).
+///
+/// Plain Dart — persisted via tabel Drift `DailyScoresTable`. `dateKey`
+/// unik (yyyy-MM-dd).
 class DailyScore {
-  Id id = Isar.autoIncrement;
+  DailyScore({
+    this.id = 0,
+    this.dateKey = '',
+    this.total = 0,
+    this.positiveCount = 0,
+    this.negativeCount = 0,
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
-  @Index(unique: true, replace: true)
-  late String dateKey; // yyyy-MM-dd
-
-  late int total;
-  late int positiveCount;
-  late int negativeCount;
-  late DateTime updatedAt;
-
-  DailyScore();
+  int id;
+  String dateKey;
+  int total;
+  int positiveCount;
+  int negativeCount;
+  DateTime updatedAt;
 }

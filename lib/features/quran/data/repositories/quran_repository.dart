@@ -1,86 +1,48 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
-import '../../../../models/quran_bookmark.dart';
-import '../../../../services/isar/isar_service.dart';
 import '../../domain/entities/surah.dart';
-import '../datasources/quran_local_datasource.dart';
 
-class QuranRepository {
-  QuranRepository(this._local, this._isarService);
+// Pilih implementasi berdasar platform: native (Isar) untuk mobile/desktop,
+// stub untuk web. Web build tidak akan pernah menyentuh Isar.
+import 'quran_repository_isar.dart'
+    if (dart.library.js_interop) 'quran_repository_web.dart' as impl;
 
-  final QuranLocalDataSource _local;
-  final IsarService _isarService;
-  Isar get _isar => _isarService.isar;
+/// Posisi bacaan terakhir — data class web-safe (bukan model Isar).
+/// UI hanya butuh 3 field ini untuk kartu "Lanjutkan membaca".
+class LastReadPosition {
+  const LastReadPosition({
+    required this.surahNumber,
+    required this.verseNumber,
+    required this.surahName,
+  });
 
-  Future<List<SurahSummary>> getAllSurah() => _local.getAllSurah();
+  final int surahNumber;
+  final int verseNumber;
+  final String surahName;
+}
 
-  Future<SurahDetail> getSurah(int number) => _local.getSurah(number);
+/// Kontrak repository Quran — dipakai UI. Implementasi dipilih via
+/// conditional import: Isar untuk mobile, stub untuk web (v1.2.1 akan
+/// mengganti stub dengan backend web nyata: Drift/IndexedDB).
+abstract class QuranRepository {
+  Future<List<SurahSummary>> getAllSurah();
+  Future<SurahDetail> getSurah(int number);
 
-  // ---- Bookmarks ----
+  Future<LastReadPosition?> getLastRead();
   Future<void> setLastRead({
     required int surahNumber,
     required int verseNumber,
     required String surahName,
-  }) async {
-    await _isar.writeTxn(() async {
-      final existing = await _isar.quranBookmarks
-          .filter()
-          .isLastReadEqualTo(true)
-          .findFirst();
-      if (existing != null) {
-        existing.isLastRead = false;
-        await _isar.quranBookmarks.put(existing);
-      }
-      final b = QuranBookmark()
-        ..surahNumber = surahNumber
-        ..verseNumber = verseNumber
-        ..surahName = surahName
-        ..isLastRead = true
-        ..createdAt = DateTime.now();
-      await _isar.quranBookmarks.put(b);
-    });
-  }
-
-  Future<QuranBookmark?> getLastRead() async {
-    return _isar.quranBookmarks
-        .filter()
-        .isLastReadEqualTo(true)
-        .findFirst();
-  }
-
+  });
   Future<void> toggleFavorite({
     required int surahNumber,
     required int verseNumber,
     required String surahName,
-  }) async {
-    await _isar.writeTxn(() async {
-      final existing = await _isar.quranBookmarks
-          .filter()
-          .surahNumberEqualTo(surahNumber)
-          .verseNumberEqualTo(verseNumber)
-          .isLastReadEqualTo(false)
-          .findFirst();
-      if (existing != null) {
-        await _isar.quranBookmarks.delete(existing.id);
-      } else {
-        final b = QuranBookmark()
-          ..surahNumber = surahNumber
-          ..verseNumber = verseNumber
-          ..surahName = surahName
-          ..isLastRead = false
-          ..createdAt = DateTime.now();
-        await _isar.quranBookmarks.put(b);
-      }
-    });
-  }
+  });
 }
 
 final quranRepositoryProvider = Provider<QuranRepository>((ref) {
-  return QuranRepository(
-    ref.watch(quranLocalProvider),
-    ref.watch(isarServiceProvider),
-  );
+  return impl.createQuranRepository(ref);
 });
 
 final allSurahProvider = FutureProvider<List<SurahSummary>>((ref) {
@@ -92,6 +54,6 @@ final surahDetailProvider =
   return ref.watch(quranRepositoryProvider).getSurah(number);
 });
 
-final lastReadProvider = FutureProvider<QuranBookmark?>((ref) {
+final lastReadProvider = FutureProvider<LastReadPosition?>((ref) {
   return ref.watch(quranRepositoryProvider).getLastRead();
 });

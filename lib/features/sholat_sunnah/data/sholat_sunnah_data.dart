@@ -1,0 +1,218 @@
+import 'package:flutter/material.dart';
+
+class NiatDoa {
+  final String arabic;
+  final String latin;
+  final String translation;
+  const NiatDoa({
+    required this.arabic,
+    required this.latin,
+    required this.translation,
+  });
+}
+
+class SholatSunnah {
+  final String id;
+  final String title;
+  final String rakaat;
+  final String waktu;
+  final String hukum; // sunnah muakkad / ghairu muakkad
+  final IconData icon;
+  final NiatDoa? niat;
+  final List<String> tataCara;
+  final String keutamaan;
+  final String? catatan;
+
+  const SholatSunnah({
+    required this.id,
+    required this.title,
+    required this.rakaat,
+    required this.waktu,
+    required this.hukum,
+    required this.icon,
+    required this.tataCara,
+    required this.keutamaan,
+    this.niat,
+    this.catatan,
+  });
+}
+
+// ⚠️ CATATAN: Tata cara di bawah disusun ringkas berdasarkan rujukan umum.
+// Mohon diverifikasi (teks niat, jumlah takbir, urutan) dengan sumber/ustadz
+// terpercaya sebelum rilis publik. Perbedaan mazhab mungkin ada.
+
+const List<SholatSunnah> kSholatSunnah = [
+  // ─────────────────────────── DHUHA ───────────────────────────
+  SholatSunnah(
+    id: 'dhuha',
+    title: 'Sholat Dhuha',
+    rakaat: '2 – 12 rakaat (kelipatan 2)',
+    waktu:
+        'Sejak matahari naik ± setinggi tombak (±15 menit setelah terbit) hingga menjelang Dzuhur',
+    hukum: 'Sunnah',
+    icon: Icons.wb_sunny,
+    niat: NiatDoa(
+      arabic: 'أُصَلِّي سُنَّةَ الضُّحَى رَكْعَتَيْنِ لِلَّهِ تَعَالَى',
+      latin: 'Ushallī sunnataḍ-ḍuḥā rak\'ataini lillāhi ta\'ālā',
+      translation:
+          'Aku berniat sholat sunnah Dhuha dua rakaat karena Allah Ta\'ala.',
+    ),
+    tataCara: [
+      'Berniat sholat Dhuha (boleh dalam hati).',
+      'Takbiratul ihram, lalu membaca doa iftitah.',
+      'Membaca Al-Fatihah dilanjutkan surat — dianjurkan Asy-Syams pada rakaat pertama.',
+      'Ruku, i\'tidal, sujud dua kali sebagaimana sholat biasa.',
+      'Rakaat kedua: Al-Fatihah lalu surat — dianjurkan Adh-Dhuha.',
+      'Tasyahud akhir lalu salam.',
+      'Boleh diulang hingga total 12 rakaat (salam tiap 2 rakaat).',
+      'Disunnahkan menutup dengan doa Dhuha.',
+    ],
+    keutamaan:
+        'Setiap pagi setiap persendian manusia wajib bersedekah; dua rakaat Dhuha mencukupi sedekah itu (HR. Muslim). Siapa rutin mengerjakannya, dibangunkan rumah di surga.',
+  ),
+
+  // ─────────────────────────── TAHAJUD ───────────────────────────
+  SholatSunnah(
+    id: 'tahajud',
+    title: 'Sholat Tahajud',
+    rakaat: '2 rakaat (minimal), boleh lebih dengan salam tiap 2 rakaat',
+    waktu:
+        'Setelah Isya hingga sebelum Subuh, dikerjakan setelah tidur. Paling utama di sepertiga malam terakhir',
+    hukum: 'Sunnah muakkad',
+    icon: Icons.bedtime,
+    niat: NiatDoa(
+      arabic: 'أُصَلِّي سُنَّةَ التَّهَجُّدِ رَكْعَتَيْنِ لِلَّهِ تَعَالَى',
+      latin: 'Ushallī sunnatat-tahajjudi rak\'ataini lillāhi ta\'ālā',
+      translation:
+          'Aku berniat sholat sunnah Tahajud dua rakaat karena Allah Ta\'ala.',
+    ),
+    tataCara: [
+      'Bangun dari tidur, berwudhu, lalu berniat sholat Tahajud.',
+      'Takbiratul ihram dan membaca doa iftitah.',
+      'Membaca Al-Fatihah dan surat apa saja (boleh memanjangkan bacaan).',
+      'Ruku, i\'tidal, dua kali sujud seperti sholat biasa.',
+      'Kerjakan rakaat kedua dengan cara yang sama, lalu tasyahud dan salam.',
+      'Boleh menambah rakaat (2-2) sesuai kemampuan.',
+      'Dianjurkan menutup malam dengan sholat Witir.',
+      'Perbanyak doa, istighfar, dan munajat setelahnya.',
+    ],
+    keutamaan:
+        'Sholat malam adalah kebiasaan orang-orang saleh, sebab dosa diampuni, dan pendekat diri kepada Allah (HR. Tirmidzi). "Dan pada sebagian malam, bertahajudlah…" (QS. Al-Isra: 79).',
+  ),
+
+  // ─────────────────────────── TAUBAT ───────────────────────────
+  SholatSunnah(
+    id: 'taubat',
+    title: 'Sholat Taubat',
+    rakaat: '2 rakaat',
+    waktu:
+        'Kapan saja saat ingin bertaubat (hindari waktu terlarang). Lebih utama di malam hari',
+    hukum: 'Sunnah',
+    icon: Icons.volunteer_activism,
+    niat: NiatDoa(
+      arabic: 'أُصَلِّي سُنَّةَ التَّوْبَةِ رَكْعَتَيْنِ لِلَّهِ تَعَالَى',
+      latin: 'Ushallī sunnatat-taubati rak\'ataini lillāhi ta\'ālā',
+      translation:
+          'Aku berniat sholat sunnah Taubat dua rakaat karena Allah Ta\'ala.',
+    ),
+    tataCara: [
+      'Berwudhu dengan sempurna, lalu berniat sholat Taubat.',
+      'Takbiratul ihram dan doa iftitah.',
+      'Membaca Al-Fatihah dan surat (mis. Al-Kafirun pada rakaat pertama).',
+      'Sempurnakan rakaat pertama, lalu rakaat kedua (mis. Al-Ikhlas).',
+      'Tasyahud akhir lalu salam.',
+      'Setelah salam, perbanyak istighfar dan sayyidul istighfar.',
+      'Menyesali dosa, bertekad tidak mengulangi, dan kembalikan hak bila terkait orang lain.',
+    ],
+    keutamaan:
+        'Tidaklah seseorang berbuat dosa lalu berwudhu, sholat dua rakaat, dan memohon ampun kepada Allah, kecuali Allah mengampuninya (HR. Abu Dawud & Tirmidzi).',
+    catatan:
+        'Sambungkan dengan dzikir Taubat di menu Dzikir untuk bacaan istighfar setelahnya.',
+  ),
+
+  // ─────────────────────────── IDUL FITRI ───────────────────────────
+  SholatSunnah(
+    id: 'idul_fitri',
+    title: 'Sholat Idul Fitri',
+    rakaat: '2 rakaat (berjamaah)',
+    waktu:
+        'Pagi 1 Syawal, sejak matahari naik ± setinggi tombak hingga sebelum Dzuhur',
+    hukum: 'Sunnah muakkad',
+    icon: Icons.celebration,
+    niat: NiatDoa(
+      arabic: 'أُصَلِّي سُنَّةً لِعِيدِ الْفِطْرِ رَكْعَتَيْنِ لِلَّهِ تَعَالَى',
+      latin: 'Ushallī sunnatan li\'īdil-fiṭri rak\'ataini lillāhi ta\'ālā',
+      translation:
+          'Aku berniat sholat sunnah Idul Fitri dua rakaat karena Allah Ta\'ala.',
+    ),
+    tataCara: [
+      'Mandi, memakai wangi-wangian dan pakaian terbaik. Makan sebelum berangkat.',
+      'Berniat sholat Id, takbiratul ihram, lalu doa iftitah.',
+      'Rakaat pertama: takbir tambahan 7 kali (selain takbiratul ihram); di antara takbir membaca tasbih.',
+      'Membaca Al-Fatihah lalu surat (mis. Al-A\'la), ruku, sujud seperti biasa.',
+      'Rakaat kedua: berdiri lalu takbir tambahan 5 kali sebelum Al-Fatihah.',
+      'Membaca Al-Fatihah lalu surat (mis. Al-Ghasyiyah), sempurnakan hingga salam.',
+      'Setelah salam, imam menyampaikan dua khutbah Id — jamaah dianjurkan menyimak.',
+    ],
+    keutamaan:
+        'Menyemarakkan syiar Islam dan kebersamaan umat di hari kemenangan setelah sebulan berpuasa.',
+    catatan:
+        'Bacaan tasbih di antara takbir: "Subhānallāh wal-ḥamdulillāh wa lā ilāha illallāh wallāhu akbar".',
+  ),
+
+  // ─────────────────────────── IDUL ADHA ───────────────────────────
+  SholatSunnah(
+    id: 'idul_adha',
+    title: 'Sholat Idul Adha',
+    rakaat: '2 rakaat (berjamaah)',
+    waktu:
+        'Pagi 10 Dzulhijjah, lebih awal dari Idul Fitri agar memberi waktu penyembelihan kurban',
+    hukum: 'Sunnah muakkad',
+    icon: Icons.mosque,
+    niat: NiatDoa(
+      arabic: 'أُصَلِّي سُنَّةً لِعِيدِ الْأَضْحَى رَكْعَتَيْنِ لِلَّهِ تَعَالَى',
+      latin: 'Ushallī sunnatan li\'īdil-aḍḥā rak\'ataini lillāhi ta\'ālā',
+      translation:
+          'Aku berniat sholat sunnah Idul Adha dua rakaat karena Allah Ta\'ala.',
+    ),
+    tataCara: [
+      'Mandi dan memakai pakaian terbaik. Disunnahkan TIDAK makan dulu hingga selesai sholat.',
+      'Berniat sholat Id, takbiratul ihram, lalu doa iftitah.',
+      'Rakaat pertama: takbir tambahan 7 kali, di antaranya membaca tasbih.',
+      'Al-Fatihah lalu surat (mis. Qaf atau Al-A\'la), ruku dan sujud seperti biasa.',
+      'Rakaat kedua: takbir tambahan 5 kali sebelum Al-Fatihah.',
+      'Al-Fatihah lalu surat (mis. Al-Qamar atau Al-Ghasyiyah), sempurnakan hingga salam.',
+      'Mendengarkan dua khutbah Id, dilanjutkan penyembelihan hewan kurban.',
+    ],
+    keutamaan:
+        'Mengikuti sunnah Nabi Ibrahim & Nabi Muhammad ﷺ serta menghidupkan ibadah kurban di hari raya haji.',
+  ),
+
+  // ─────────────── QOBLIYAH & BA'DIYAH (RAWATIB) ───────────────
+  SholatSunnah(
+    id: 'rawatib',
+    title: 'Qobliyah & Ba\'diyah (Rawatib)',
+    rakaat: 'Masing-masing 2 rakaat (lihat rincian)',
+    waktu: 'Mengiringi sholat fardhu — sebelum (qobliyah) & sesudah (ba\'diyah)',
+    hukum: 'Sebagian muakkad, sebagian ghairu muakkad',
+    icon: Icons.repeat,
+    niat: NiatDoa(
+      arabic: 'أُصَلِّي سُنَّةَ الصُّبْحِ رَكْعَتَيْنِ قَبْلِيَّةً لِلَّهِ تَعَالَى',
+      latin: 'Ushallī sunnataṣ-ṣubḥi rak\'ataini qabliyyatan lillāhi ta\'ālā',
+      translation:
+          'Aku berniat sholat sunnah qobliyah Subuh dua rakaat karena Allah Ta\'ala. (Ganti nama sholat sesuai waktunya — mis. "ba\'diyyah" untuk sesudah.)',
+    ),
+    tataCara: [
+      'Rincian rawatib muakkad (sangat dianjurkan):',
+      '• 2 rakaat sebelum Subuh — paling utama, jangan ditinggalkan.',
+      '• 2 atau 4 rakaat sebelum Dzuhur, dan 2 rakaat sesudahnya.',
+      '• 2 rakaat sesudah Maghrib.',
+      '• 2 rakaat sesudah Isya.',
+      'Rawatib ghairu muakkad (tetap berpahala): 4 rakaat sebelum Ashar, 2 rakaat sebelum Maghrib, 2 rakaat sebelum Isya.',
+      'Cara mengerjakan sama seperti sholat sunnah 2 rakaat biasa, salam tiap 2 rakaat.',
+      'Dikerjakan sendiri-sendiri (tidak berjamaah).',
+    ],
+    keutamaan:
+        'Siapa sholat 12 rakaat rawatib dalam sehari semalam, dibangunkan untuknya rumah di surga (HR. Muslim). Dua rakaat fajar (sebelum Subuh) lebih baik dari dunia dan seisinya.',
+  ),
+];

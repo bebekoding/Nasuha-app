@@ -1,0 +1,212 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+import '../../../../config/theme/theme_controller.dart';
+import '../../../muhasabah/data/repositories/muhasabah_repository.dart';
+import '../../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
+import '../providers/settings_providers.dart';
+
+class SettingsScreen extends ConsumerWidget {
+  const SettingsScreen({super.key});
+
+  static const _calcMethods = {
+    'muslimWorldLeague': 'Muslim World League',
+    'egyptian': 'Egyptian',
+    'karachi': 'Karachi',
+    'ummAlQura': 'Umm Al-Qura',
+    'dubai': 'Dubai',
+    'qatar': 'Qatar',
+    'kuwait': 'Kuwait',
+    'singapore': 'Singapore (Indonesia)',
+    'turkey': 'Turkey',
+    'tehran': 'Tehran',
+    'northAmerica': 'North America',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsControllerProvider);
+    final themeMode = ref.watch(themeControllerProvider);
+    final settingsCtrl = ref.read(settingsControllerProvider.notifier);
+    final themeCtrl = ref.read(themeControllerProvider.notifier);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Pengaturan')),
+      body: ListView(
+        children: [
+          const _SectionTitle('Tampilan'),
+          ListTile(
+            leading: const Icon(Icons.brightness_6),
+            title: const Text('Tema'),
+            subtitle: Text(switch (themeMode) {
+              ThemeMode.light => 'Terang',
+              ThemeMode.dark => 'Gelap',
+              ThemeMode.system => 'Mengikuti sistem',
+            }),
+            trailing: DropdownButton<ThemeMode>(
+              value: themeMode,
+              underline: const SizedBox(),
+              items: const [
+                DropdownMenuItem(
+                    value: ThemeMode.system, child: Text('Sistem')),
+                DropdownMenuItem(
+                    value: ThemeMode.light, child: Text('Terang')),
+                DropdownMenuItem(
+                    value: ThemeMode.dark, child: Text('Gelap')),
+              ],
+              onChanged: (v) => v == null ? null : themeCtrl.set(v),
+            ),
+          ),
+          const Divider(),
+          const _SectionTitle('Sholat'),
+          ListTile(
+            leading: const Icon(Icons.calculate_outlined),
+            title: const Text('Metode kalkulasi'),
+            subtitle:
+                Text(_calcMethods[settings.calculationMethod] ?? 'Default'),
+            trailing: DropdownButton<String>(
+              value: settings.calculationMethod,
+              underline: const SizedBox(),
+              items: _calcMethods.entries
+                  .map((e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(e.value),
+                      ))
+                  .toList(),
+              onChanged: (v) => v == null
+                  ? null
+                  : settingsCtrl.update((s) => s..calculationMethod = v),
+            ),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.notifications_active_outlined),
+            title: const Text('Notifikasi adzan'),
+            value: settings.adhanNotifications,
+            onChanged: (v) =>
+                settingsCtrl.update((s) => s..adhanNotifications = v),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.alarm),
+            title: const Text('Pengingat ibadah'),
+            value: settings.reminderNotifications,
+            onChanged: (v) =>
+                settingsCtrl.update((s) => s..reminderNotifications = v),
+          ),
+          const Divider(),
+          const _SectionTitle('Privasi & Keamanan'),
+          SwitchListTile(
+            secondary: const Icon(Icons.fingerprint),
+            title: const Text('Kunci biometrik'),
+            subtitle:
+                const Text('Buka aplikasi dengan biometrik / PIN perangkat'),
+            value: settings.biometricLock,
+            onChanged: (v) =>
+                settingsCtrl.update((s) => s..biometricLock = v),
+          ),
+          ListTile(
+            leading: const Icon(Icons.cloud_sync_outlined),
+            title: const Text('Akun & Pemulihan'),
+            subtitle: const Text(
+                'Login & pulihkan data saat ganti atau kehilangan HP'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/backup'),
+          ),
+          const Divider(),
+          const _SectionTitle('Muhasabah'),
+          ListTile(
+            leading: const Icon(Icons.delete_sweep_outlined),
+            title: const Text('Nonaktifkan & Reset Data'),
+            subtitle: const Text(
+                'Berhenti menggunakan Muhasabah dan hapus semua catatan'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showResetDialog(context, ref),
+          ),
+          const Divider(),
+          const _SectionTitle('Tentang'),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snap) {
+              final v = snap.data?.version ?? '';
+              return ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('Nasuha'),
+                subtitle: Text(
+                  '${v.isEmpty ? '' : 'Versi $v — '}'
+                  'Level up your soul · Level up your amal',
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _showResetDialog(BuildContext context, WidgetRef ref) async {
+  final muhasabahOn = ref.read(muhasabahEnabledProvider);
+  final choice = await showDialog<_ResetChoice>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Nonaktifkan Muhasabah?'),
+      content: const Text(
+        'Pilih tindakan:\n\n'
+        '• "Nonaktifkan saja" — fitur disembunyikan, data tetap tersimpan '
+        'jika suatu saat ingin diaktifkan kembali.\n\n'
+        '• "Hapus semua & nonaktifkan" — semua catatan, XP, dan streak '
+        'dihapus permanen. Tidak bisa dibatalkan.',
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.of(ctx).pop(_ResetChoice.cancel),
+            child: const Text('Batal')),
+        OutlinedButton(
+            onPressed: () => Navigator.of(ctx).pop(_ResetChoice.disableOnly),
+            child: const Text('Nonaktifkan saja')),
+        Builder(builder: (bCtx) {
+          final cs = Theme.of(bCtx).colorScheme;
+          return FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: cs.error,
+                foregroundColor: cs.onError),
+            onPressed: () =>
+                Navigator.of(ctx).pop(_ResetChoice.disableAndReset),
+            child: const Text('Hapus semua & nonaktifkan'),
+          );
+        }),
+      ],
+    ),
+  );
+  if (choice == null || choice == _ResetChoice.cancel) return;
+  if (!muhasabahOn && choice == _ResetChoice.disableOnly) return;
+
+  if (choice == _ResetChoice.disableAndReset) {
+    await ref.read(muhasabahRepositoryProvider).resetAllData();
+  }
+  await ref.read(muhasabahEnabledProvider.notifier).disable();
+  if (context.mounted) context.go('/');
+}
+
+enum _ResetChoice { cancel, disableOnly, disableAndReset }
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.title);
+  final String title;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.primary,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+}

@@ -14,7 +14,6 @@ import '../../models/muhasabah_entry.dart';
 import '../../models/muhasabah_tag.dart';
 import '../../models/quran_bookmark.dart';
 import '../../models/streak.dart';
-import '../../models/user_settings.dart';
 
 class IsarService {
   IsarService(this.isar);
@@ -34,7 +33,6 @@ class IsarService {
     StreakSchema,
     QuranBookmarkSchema,
     CachedSurahSchema,
-    UserSettingsSchema,
   ];
 
   static Future<IsarService> open() async {
@@ -88,12 +86,7 @@ class IsarService {
       });
     }
 
-    final settings = await isar.userSettings.get(0);
-    if (settings == null) {
-      await isar.writeTxn(() async {
-        await isar.userSettings.put(UserSettings());
-      });
-    }
+    // UserSettings sudah pindah ke Drift (lihat `services/database/`).
   }
 
   /// Idempotent migration — safe to run on every app start.

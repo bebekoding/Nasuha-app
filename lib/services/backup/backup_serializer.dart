@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:isar/isar.dart';
 
 import '../../models/achievement.dart';
@@ -10,6 +11,7 @@ import '../../models/muhasabah_tag.dart';
 import '../../models/quran_bookmark.dart';
 import '../../models/streak.dart';
 import '../../models/user_settings.dart';
+import '../database/app_database.dart';
 
 /// Schema version of the backup payload. Bump on breaking changes.
 const int kBackupSchemaVersion = 1;
@@ -44,8 +46,9 @@ class BackupPayload {
 }
 
 class BackupSerializer {
-  BackupSerializer(this.isar);
+  BackupSerializer(this.isar, this.db);
   final Isar isar;
+  final AppDatabase db;
 
   Future<String> exportToJsonString() async {
     final payload = await _buildPayload();
@@ -60,21 +63,26 @@ class BackupSerializer {
     final achievements = await isar.achievements.where().findAll();
     final streaks = await isar.streaks.where().findAll();
     final bookmarks = await isar.quranBookmarks.where().findAll();
-    final settings = await isar.userSettings.get(0);
+    final settingsRow =
+        await db.select(db.userSettingsTable).getSingleOrNull();
+    final settings = settingsRow == null ? null : _settingsFromRow(settingsRow);
 
+    final collections = <String, List<Map<String, dynamic>>>{
+      'muhasabahTags': tags.map(_tagToJson).toList(),
+      'muhasabahEntries': entries.map(_entryToJson).toList(),
+      'dailyScores': scores.map(_scoreToJson).toList(),
+      'charityRecords': charity.map(_charityToJson).toList(),
+      'achievements': achievements.map(_achievementToJson).toList(),
+      'streaks': streaks.map(_streakToJson).toList(),
+      'quranBookmarks': bookmarks.map(_bookmarkToJson).toList(),
+    };
+    if (settings != null) {
+      collections['userSettings'] = [_settingsToJson(settings)];
+    }
     return BackupPayload(
       schemaVersion: kBackupSchemaVersion,
       createdAt: DateTime.now(),
-      collections: {
-        'muhasabahTags': tags.map(_tagToJson).toList(),
-        'muhasabahEntries': entries.map(_entryToJson).toList(),
-        'dailyScores': scores.map(_scoreToJson).toList(),
-        'charityRecords': charity.map(_charityToJson).toList(),
-        'achievements': achievements.map(_achievementToJson).toList(),
-        'streaks': streaks.map(_streakToJson).toList(),
-        'quranBookmarks': bookmarks.map(_bookmarkToJson).toList(),
-        if (settings != null) 'userSettings': [_settingsToJson(settings)],
-      },
+      collections: collections,
     );
   }
 
@@ -97,7 +105,6 @@ class BackupSerializer {
       await isar.achievements.clear();
       await isar.streaks.clear();
       await isar.quranBookmarks.clear();
-      await isar.userSettings.clear();
 
       for (final m in payload.collections['muhasabahTags'] ?? const []) {
         await isar.muhasabahTags.put(_tagFromJson(m));
@@ -120,12 +127,43 @@ class BackupSerializer {
       for (final m in payload.collections['quranBookmarks'] ?? const []) {
         await isar.quranBookmarks.put(_bookmarkFromJson(m));
       }
-      final settingsJson = payload.collections['userSettings'];
-      if (settingsJson != null && settingsJson.isNotEmpty) {
-        await isar.userSettings.put(_settingsFromJson(settingsJson.first));
-      }
     });
+
+    // Settings kini di Drift (di luar transaksi Isar).
+    final settingsJson = payload.collections['userSettings'];
+    if (settingsJson != null && settingsJson.isNotEmpty) {
+      final s = _settingsFromJson(settingsJson.first);
+      await db.into(db.userSettingsTable).insertOnConflictUpdate(
+            UserSettingsTableCompanion.insert(
+              displayName: Value(s.displayName),
+              photoPath: Value(s.photoPath),
+              city: Value(s.city),
+              lastLatitude: Value(s.lastLatitude),
+              lastLongitude: Value(s.lastLongitude),
+              calculationMethod: Value(s.calculationMethod),
+              adhanNotifications: Value(s.adhanNotifications),
+              reminderNotifications: Value(s.reminderNotifications),
+              biometricLock: Value(s.biometricLock),
+              cloudSync: Value(s.cloudSync),
+              lastSyncAt: Value(s.lastSyncAt),
+            ),
+          );
+    }
   }
+
+  UserSettings _settingsFromRow(UserSettingsRow r) => UserSettings(
+        displayName: r.displayName,
+        photoPath: r.photoPath,
+        city: r.city,
+        lastLatitude: r.lastLatitude,
+        lastLongitude: r.lastLongitude,
+        calculationMethod: r.calculationMethod,
+        adhanNotifications: r.adhanNotifications,
+        reminderNotifications: r.reminderNotifications,
+        biometricLock: r.biometricLock,
+        cloudSync: r.cloudSync,
+        lastSyncAt: r.lastSyncAt,
+      );
 
   // ----- mappers -----
   Map<String, dynamic> _tagToJson(MuhasabahTag t) => {

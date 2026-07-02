@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../models/charity_record.dart';
 import '../../models/muhasabah_entry.dart';
+import '../database/app_database.dart';
 import '../isar/isar_service.dart';
 import 'backup_crypto.dart';
 import 'backup_serializer.dart';
@@ -20,10 +21,11 @@ class BackupResult {
 class BackupService {
   BackupService({
     required IsarService isarService,
+    required AppDatabase db,
     required DriveBackupClient drive,
     BackupCrypto? crypto,
   })  : _isar = isarService,
-        _serializer = BackupSerializer(isarService.isar),
+        _serializer = BackupSerializer(isarService.isar, db),
         _drive = drive,
         _crypto = crypto ?? BackupCrypto();
 
@@ -144,6 +146,7 @@ final driveBackupClientProvider = Provider<DriveBackupClient>((ref) {
 final backupServiceProvider = Provider<BackupService>((ref) {
   return BackupService(
     isarService: ref.watch(isarServiceProvider),
+    db: ref.watch(appDatabaseProvider),
     drive: ref.watch(driveBackupClientProvider),
   );
 });

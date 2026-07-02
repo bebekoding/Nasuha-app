@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'app_database.g.dart';
 part 'tables/quran_bookmarks.dart';
+part 'tables/user_settings_table.dart';
 
 /// Database utama Nasuha (Drift) — menggantikan Isar bertahap untuk mendukung
 /// PWA (jalan di mobile via native sqlite dan di browser via sqlite-wasm).
@@ -11,10 +12,11 @@ part 'tables/quran_bookmarks.dart';
 /// Setiap collection Isar akan dipindahkan satu per satu ke tabel di sini.
 /// Tabel yang sudah dimigrasi (per Jul 2 2026):
 ///   - QuranBookmarks
+///   - UserSettingsTable (singleton, id=1)
 /// Belum dimigrasi (masih Isar):
-///   - UserSettings, MuhasabahTag, MuhasabahEntry, DailyScore, Streak,
+///   - MuhasabahTag, MuhasabahEntry, DailyScore, Streak,
 ///     Achievement, CharityRecord, CachedSurah
-@DriftDatabase(tables: [QuranBookmarks])
+@DriftDatabase(tables: [QuranBookmarks, UserSettingsTable])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
 
@@ -22,15 +24,24 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
+          // Seed baris singleton settings (id=1).
+          await into(userSettingsTable).insert(
+            UserSettingsTableCompanion.insert(),
+          );
         },
         onUpgrade: (m, from, to) async {
-          // Skema perubahan akan dicatat di sini seiring tabel ditambahkan.
+          if (from < 2) {
+            await m.createTable(userSettingsTable);
+            await into(userSettingsTable).insert(
+              UserSettingsTableCompanion.insert(),
+            );
+          }
         },
       );
 }

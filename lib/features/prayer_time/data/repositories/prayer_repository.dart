@@ -1,20 +1,20 @@
 import 'package:adhan/adhan.dart' as adhan;
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 
-import '../../../../models/user_settings.dart';
-import '../../../../services/isar/isar_service.dart';
+import '../../../../services/database/app_database.dart';
 import '../../../../services/location/location_service.dart';
 import '../../domain/entities/prayer_schedule.dart';
 
 class PrayerRepository {
-  PrayerRepository(this._location, this._isarService);
+  PrayerRepository(this._location, this._db);
 
   final LocationService _location;
-  final IsarService _isarService;
+  final AppDatabase _db;
 
   Future<PrayerSchedule?> getTodaySchedule({String? methodOverride}) async {
-    final settings = await _isarService.isar.userSettings.get(0);
+    final settings = await _db.select(_db.userSettingsTable).getSingleOrNull();
     double? lat = settings?.lastLatitude;
     double? lng = settings?.lastLongitude;
     String? savedLocationName = settings?.city;
@@ -30,15 +30,14 @@ class PrayerRepository {
         savedLocationName = await _reverseGeocode(lat, lng);
       }
 
-      if (settings != null) {
-        await _isarService.isar.writeTxn(() async {
-          settings
-            ..lastLatitude = lat
-            ..lastLongitude = lng
-            ..city = savedLocationName;
-          await _isarService.isar.userSettings.put(settings);
-        });
-      }
+      await _db.into(_db.userSettingsTable).insertOnConflictUpdate(
+            UserSettingsTableCompanion(
+              id: const Value(1),
+              lastLatitude: Value(lat),
+              lastLongitude: Value(lng),
+              city: Value(savedLocationName),
+            ),
+          );
     }
 
     if (lat == null || lng == null) return null;
@@ -115,7 +114,7 @@ class PrayerRepository {
 final prayerRepositoryProvider = Provider<PrayerRepository>((ref) {
   return PrayerRepository(
     ref.watch(locationServiceProvider),
-    ref.watch(isarServiceProvider),
+    ref.watch(appDatabaseProvider),
   );
 });
 

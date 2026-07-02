@@ -7,8 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../config/theme/theme_controller.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../models/user_settings.dart';
-import '../../../services/isar/isar_service.dart';
+import '../../settings/presentation/providers/settings_providers.dart';
 import '../../../services/notification/notification_service.dart';
 import '../../prayer_time/data/prayer_notification_scheduler.dart';
 import '../../settings/presentation/providers/backup_providers.dart';
@@ -46,8 +45,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       return;
     }
 
-    final settings = ref.read(isarServiceProvider).isar.userSettings.getSync(0);
-    final lockOn = settings?.biometricLock ?? false;
+    final settings = ref.read(settingsControllerProvider);
+    final lockOn = settings.biometricLock;
     context.go(lockOn ? '/lock' : '/');
   }
 

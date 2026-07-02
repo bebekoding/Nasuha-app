@@ -68,3 +68,7 @@ key.properties
 
 # Vercel
 .vercel/
+
+# Drift web runtime (didownload di CI/build step, tidak perlu di repo)
+web/sqlite3.wasm
+web/drift_worker.js

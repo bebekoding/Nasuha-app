@@ -2,10 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/surah.dart';
 
-// Pilih implementasi berdasar platform: native (Isar) untuk mobile/desktop,
-// stub untuk web. Web build tidak akan pernah menyentuh Isar.
-import 'quran_repository_isar.dart'
-    if (dart.library.js_interop) 'quran_repository_web.dart' as impl;
+// Implementasi Drift lintas platform (mobile: sqlite native, web:
+// sqlite-wasm) — menggantikan pasangan Isar/stub-web sebelumnya.
+import 'quran_repository_drift.dart' as impl;
 
 /// Posisi bacaan terakhir — data class web-safe (bukan model Isar).
 /// UI hanya butuh 3 field ini untuk kartu "Lanjutkan membaca".

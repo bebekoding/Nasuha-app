@@ -23,6 +23,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Download Drift web runtime (sqlite3.wasm + drift_worker.js)
+        run: |
+          curl -sL -o web/sqlite3.wasm \
+            "https://github.com/simolus3/sqlite3.dart/releases/latest/download/sqlite3.wasm"
+          curl -sL -o web/drift_worker.js \
+            "https://github.com/simolus3/drift/releases/latest/download/drift_worker.js"
+          ls -lh web/sqlite3.wasm web/drift_worker.js
+
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 

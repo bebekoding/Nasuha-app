@@ -59,7 +59,8 @@ class BackupSerializer {
     final tags = await isar.muhasabahTags.where().findAll();
     final entries = await isar.muhasabahEntrys.where().findAll();
     final scores = await isar.dailyScores.where().findAll();
-    final charity = await isar.charityRecords.where().findAll();
+    final charityRows = await db.select(db.charityRecordsTable).get();
+    final charity = charityRows.map(_charityFromRow).toList();
     final achievements = await isar.achievements.where().findAll();
     final streaks = await isar.streaks.where().findAll();
     final bookmarks = await isar.quranBookmarks.where().findAll();
@@ -101,7 +102,7 @@ class BackupSerializer {
       await isar.muhasabahTags.clear();
       await isar.muhasabahEntrys.clear();
       await isar.dailyScores.clear();
-      await isar.charityRecords.clear();
+      // charity_records dipindah ke Drift — dihapus di luar tx Isar.
       await isar.achievements.clear();
       await isar.streaks.clear();
       await isar.quranBookmarks.clear();
@@ -115,9 +116,7 @@ class BackupSerializer {
       for (final m in payload.collections['dailyScores'] ?? const []) {
         await isar.dailyScores.put(_scoreFromJson(m));
       }
-      for (final m in payload.collections['charityRecords'] ?? const []) {
-        await isar.charityRecords.put(_charityFromJson(m));
-      }
+      // charity_records: dipindah ke Drift (proses di luar tx Isar).
       for (final m in payload.collections['achievements'] ?? const []) {
         await isar.achievements.put(_achievementFromJson(m));
       }
@@ -128,6 +127,21 @@ class BackupSerializer {
         await isar.quranBookmarks.put(_bookmarkFromJson(m));
       }
     });
+
+    // Charity records kini di Drift.
+    await db.delete(db.charityRecordsTable).go();
+    for (final m in payload.collections['charityRecords'] ?? const []) {
+      final c = _charityFromJson(m);
+      await db.into(db.charityRecordsTable).insert(
+            CharityRecordsTableCompanion.insert(
+              dateKey: c.dateKey,
+              createdAt: c.createdAt,
+              amount: c.amount,
+              note: Value(c.note),
+              category: Value(c.category),
+            ),
+          );
+    }
 
     // Settings kini di Drift (di luar transaksi Isar).
     final settingsJson = payload.collections['userSettings'];
@@ -227,12 +241,22 @@ class BackupSerializer {
         'category': r.category,
       };
 
-  CharityRecord _charityFromJson(Map<String, dynamic> j) => CharityRecord()
-    ..dateKey = j['dateKey'] as String
-    ..createdAt = DateTime.parse(j['createdAt'] as String)
-    ..amount = (j['amount'] as num).toDouble()
-    ..note = j['note'] as String?
-    ..category = j['category'] as String?;
+  CharityRecord _charityFromJson(Map<String, dynamic> j) => CharityRecord(
+        dateKey: j['dateKey'] as String,
+        createdAt: DateTime.parse(j['createdAt'] as String),
+        amount: (j['amount'] as num).toDouble(),
+        note: j['note'] as String?,
+        category: j['category'] as String?,
+      );
+
+  CharityRecord _charityFromRow(CharityRecordRow r) => CharityRecord(
+        id: r.id,
+        dateKey: r.dateKey,
+        createdAt: r.createdAt,
+        amount: r.amount,
+        note: r.note,
+        category: r.category,
+      );
 
   Map<String, dynamic> _achievementToJson(Achievement a) => {
         'code': a.code,

@@ -1,16 +1,16 @@
+import 'package:drift/drift.dart' show OrderingMode, OrderingTerm, Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
 import '../../../../core/extensions/date_extensions.dart';
 import '../../../../models/charity_record.dart';
-import '../../../../services/isar/isar_service.dart';
+import '../../../../services/database/app_database.dart';
 import '../../../achievements/data/achievement_engine.dart';
 
 class SedekahRepository {
-  SedekahRepository(this._service, this._achievements);
-  final IsarService _service;
+  SedekahRepository(this._db, this._achievements);
+
+  final AppDatabase _db;
   final AchievementEngine _achievements;
-  Isar get _isar => _service.isar;
 
   Future<void> add({
     required double amount,
@@ -18,13 +18,15 @@ class SedekahRepository {
     String? category,
   }) async {
     final now = DateTime.now();
-    final r = CharityRecord()
-      ..dateKey = now.isoDate
-      ..createdAt = now
-      ..amount = amount
-      ..note = note
-      ..category = category;
-    await _isar.writeTxn(() => _isar.charityRecords.put(r));
+    await _db.into(_db.charityRecordsTable).insert(
+          CharityRecordsTableCompanion.insert(
+            dateKey: now.isoDate,
+            createdAt: now,
+            amount: amount,
+            note: Value(note),
+            category: Value(category),
+          ),
+        );
     await _achievements.recomputeAll();
   }
 
@@ -34,54 +36,72 @@ class SedekahRepository {
     String? note,
     String? category,
   }) async {
-    final r = await _isar.charityRecords.get(id);
-    if (r == null) return;
-    r
-      ..amount = amount
-      ..note = note
-      ..category = category;
-    await _isar.writeTxn(() => _isar.charityRecords.put(r));
+    await (_db.update(_db.charityRecordsTable)..where((t) => t.id.equals(id)))
+        .write(
+      CharityRecordsTableCompanion(
+        amount: Value(amount),
+        note: Value(note),
+        category: Value(category),
+      ),
+    );
     await _achievements.recomputeAll();
   }
 
   Future<void> delete(int id) async {
-    await _isar.writeTxn(() => _isar.charityRecords.delete(id));
+    await (_db.delete(_db.charityRecordsTable)..where((t) => t.id.equals(id)))
+        .go();
     await _achievements.recomputeAll();
   }
 
-  Stream<List<CharityRecord>> watchAll() => _isar.charityRecords
-      .where()
-      .sortByCreatedAtDesc()
-      .watch(fireImmediately: true);
+  Stream<List<CharityRecord>> watchAll() {
+    return (_db.select(_db.charityRecordsTable)
+          ..orderBy(
+              [(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)]))
+        .watch()
+        .map((rows) => rows.map(_rowToDomain).toList());
+  }
 
   Stream<List<CharityRecord>> watchToday() {
     final today = DateTime.now().isoDate;
-    return _isar.charityRecords
-        .filter()
-        .dateKeyEqualTo(today)
-        .watch(fireImmediately: true);
+    return (_db.select(_db.charityRecordsTable)
+          ..where((t) => t.dateKey.equals(today)))
+        .watch()
+        .map((rows) => rows.map(_rowToDomain).toList());
   }
 
   Future<({double total, int count})> totalAll() async {
-    final all = await _isar.charityRecords.where().findAll();
+    final rows = await _db.select(_db.charityRecordsTable).get();
     return (
-      total: all.fold<double>(0, (s, r) => s + r.amount),
-      count: all.length
+      total: rows.fold<double>(0, (s, r) => s + r.amount),
+      count: rows.length,
     );
   }
 
   Future<List<CharityRecord>> rangeFromToday(Duration range) async {
     final from = DateTime.now().subtract(range);
-    return _isar.charityRecords
-        .filter()
-        .createdAtGreaterThan(from)
-        .findAll();
+    // Filter di Dart — data sedekah pribadi kecil (max ratusan), tak perlu
+    // WHERE di SQL; ini juga menghindari inkonsistensi API DateTime antar
+    // versi Drift.
+    final rows = await _db.select(_db.charityRecordsTable).get();
+    return rows
+        .where((r) => r.createdAt.isAfter(from))
+        .map(_rowToDomain)
+        .toList();
   }
+
+  CharityRecord _rowToDomain(CharityRecordRow r) => CharityRecord(
+        id: r.id,
+        dateKey: r.dateKey,
+        createdAt: r.createdAt,
+        amount: r.amount,
+        note: r.note,
+        category: r.category,
+      );
 }
 
 final sedekahRepositoryProvider = Provider<SedekahRepository>((ref) {
   return SedekahRepository(
-    ref.watch(isarServiceProvider),
+    ref.watch(appDatabaseProvider),
     ref.watch(achievementEngineProvider),
   );
 });

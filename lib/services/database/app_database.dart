@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 part 'app_database.g.dart';
 part 'tables/quran_bookmarks.dart';
 part 'tables/user_settings_table.dart';
+part 'tables/charity_records_table.dart';
 
 /// Database utama Nasuha (Drift) — menggantikan Isar bertahap untuk mendukung
 /// PWA (jalan di mobile via native sqlite dan di browser via sqlite-wasm).
@@ -13,10 +14,11 @@ part 'tables/user_settings_table.dart';
 /// Tabel yang sudah dimigrasi (per Jul 2 2026):
 ///   - QuranBookmarks
 ///   - UserSettingsTable (singleton, id=1)
+///   - CharityRecordsTable
 /// Belum dimigrasi (masih Isar):
 ///   - MuhasabahTag, MuhasabahEntry, DailyScore, Streak,
-///     Achievement, CharityRecord, CachedSurah
-@DriftDatabase(tables: [QuranBookmarks, UserSettingsTable])
+///     Achievement, CachedSurah
+@DriftDatabase(tables: [QuranBookmarks, UserSettingsTable, CharityRecordsTable])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
 
@@ -24,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -41,6 +43,12 @@ class AppDatabase extends _$AppDatabase {
             await into(userSettingsTable).insert(
               UserSettingsTableCompanion.insert(),
             );
+          }
+          if (from < 3) {
+            await m.createTable(charityRecordsTable);
+            // Indeks dateKey akan dibuat otomatis oleh createAll saat
+            // instalasi baru; untuk upgrade, index dilewati (query tetap
+            // jalan tanpa optimasi indeks — trade-off yang bisa diterima).
           }
         },
       );

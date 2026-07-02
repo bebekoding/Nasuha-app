@@ -10,6 +10,7 @@ import 'config/theme/theme_controller.dart';
 import 'core/constants/app_constants.dart';
 import 'core/extensions/date_extensions.dart';
 import 'features/achievements/data/achievement_engine.dart';
+import 'services/database/app_database.dart';
 import 'services/dev/dummy_seeder.dart';
 import 'services/isar/isar_service.dart';
 import 'services/notification/notification_service.dart';
@@ -30,10 +31,11 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final isarService = await IsarService.open();
+  final appDb = AppDatabase();
 
   if (kSeedDummyData) {
-    await DummySeeder(isarService).seed();
-    await AchievementEngine(isarService).recomputeAll();
+    await DummySeeder(isarService, appDb).seed();
+    await AchievementEngine(isarService, appDb).recomputeAll();
     // Demo needs Muhasabah opted-in so the home HUD/rank strip renders.
     await prefs.setBool(AppConstants.prefsMuhasabahEnabled, true);
   }
@@ -62,6 +64,7 @@ Future<void> main() async {
       overrides: [
         sharedPrefsProvider.overrideWithValue(prefs),
         isarServiceProvider.overrideWithValue(isarService),
+        appDatabaseProvider.overrideWithValue(appDb),
         notificationServiceProvider.overrideWithValue(notif),
       ],
       child: const MuhasabahApp(),

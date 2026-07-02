@@ -1,15 +1,16 @@
 import 'dart:math';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:isar/isar.dart';
 
 import '../../core/extensions/date_extensions.dart';
-import '../../models/charity_record.dart';
 import '../../models/daily_score.dart';
 import '../../models/muhasabah_entry.dart';
 import '../../models/muhasabah_tag.dart';
 import '../../models/streak.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../database/app_database.dart';
 import '../isar/isar_service.dart';
 
 /// DEV-ONLY: fills the database with ~45 days of plausible muhasabah/sedekah
@@ -18,8 +19,9 @@ import '../isar/isar_service.dart';
 ///
 /// Remove the call site (and ideally this file) before shipping.
 class DummySeeder {
-  DummySeeder(this._service);
+  DummySeeder(this._service, this._db);
   final IsarService _service;
+  final AppDatabase _db;
   Isar get _isar => _service.isar;
 
   static const _days = 45;
@@ -35,11 +37,15 @@ class DummySeeder {
     final rng = Random(42); // deterministic
     final now = DateTime.now();
 
+    // Buffer sedekah — Drift & Isar tak bisa share transaction; flush setelah.
+    final pendingCharity =
+        <({String dateKey, DateTime createdAt, double amount, String? note})>[];
+
     await _isar.writeTxn(() async {
       // Clear existing journal data (keep tags & achievements definitions)
       await _isar.muhasabahEntrys.clear();
       await _isar.dailyScores.clear();
-      await _isar.charityRecords.clear();
+      // charity_records dipindah ke Drift — clear di luar tx Isar (di bawah)
       await _isar.streaks.clear();
 
       MuhasabahTag bySlug(String s) =>
@@ -153,15 +159,15 @@ class DummySeeder {
           ..negativeCount = negCount
           ..updatedAt = day);
 
-        // Sedekah on ~40% of days
+        // Sedekah on ~40% of days (di-buffer, di-flush ke Drift setelah tx)
         if (rng.nextDouble() < 0.4) {
-          final amount =
-              (rng.nextInt(20) + 1) * 5000.0; // 5k..100k
-          await _isar.charityRecords.put(CharityRecord()
-            ..dateKey = dateKey
-            ..createdAt = stamp(12)
-            ..amount = amount
-            ..note = rng.nextBool() ? 'Infaq masjid' : null);
+          final amount = (rng.nextInt(20) + 1) * 5000.0; // 5k..100k
+          pendingCharity.add((
+            dateKey: dateKey,
+            createdAt: stamp(12),
+            amount: amount,
+            note: rng.nextBool() ? 'Infaq masjid' : null,
+          ));
         }
       }
 
@@ -182,9 +188,25 @@ class DummySeeder {
         ..longest = max(streakCount, 30)
         ..lastDateKey = now.isoDate);
     });
+
+    // Flush charity ke Drift (di luar tx Isar).
+    await _db.delete(_db.charityRecordsTable).go();
+    for (final c in pendingCharity) {
+      await _db.into(_db.charityRecordsTable).insert(
+            CharityRecordsTableCompanion.insert(
+              dateKey: c.dateKey,
+              createdAt: c.createdAt,
+              amount: c.amount,
+              note: Value(c.note),
+            ),
+          );
+    }
   }
 }
 
 final dummySeederProvider = Provider<DummySeeder>((ref) {
-  return DummySeeder(ref.watch(isarServiceProvider));
+  return DummySeeder(
+    ref.watch(isarServiceProvider),
+    ref.watch(appDatabaseProvider),
+  );
 });

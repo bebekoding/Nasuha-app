@@ -1215,12 +1215,415 @@ class UserSettingsTableCompanion extends UpdateCompanion<UserSettingsRow> {
   }
 }
 
+class $CharityRecordsTableTable extends CharityRecordsTable
+    with TableInfo<$CharityRecordsTableTable, CharityRecordRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CharityRecordsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dateKeyMeta = const VerificationMeta(
+    'dateKey',
+  );
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+    'date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dateKey,
+    createdAt,
+    amount,
+    note,
+    category,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'charity_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CharityRecordRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date_key')) {
+      context.handle(
+        _dateKeyMeta,
+        dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CharityRecordRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CharityRecordRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      dateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
+    );
+  }
+
+  @override
+  $CharityRecordsTableTable createAlias(String alias) {
+    return $CharityRecordsTableTable(attachedDatabase, alias);
+  }
+}
+
+class CharityRecordRow extends DataClass
+    implements Insertable<CharityRecordRow> {
+  final int id;
+  final String dateKey;
+  final DateTime createdAt;
+  final double amount;
+  final String? note;
+  final String? category;
+  const CharityRecordRow({
+    required this.id,
+    required this.dateKey,
+    required this.createdAt,
+    required this.amount,
+    this.note,
+    this.category,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date_key'] = Variable<String>(dateKey);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['amount'] = Variable<double>(amount);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
+    return map;
+  }
+
+  CharityRecordsTableCompanion toCompanion(bool nullToAbsent) {
+    return CharityRecordsTableCompanion(
+      id: Value(id),
+      dateKey: Value(dateKey),
+      createdAt: Value(createdAt),
+      amount: Value(amount),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
+    );
+  }
+
+  factory CharityRecordRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CharityRecordRow(
+      id: serializer.fromJson<int>(json['id']),
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      amount: serializer.fromJson<double>(json['amount']),
+      note: serializer.fromJson<String?>(json['note']),
+      category: serializer.fromJson<String?>(json['category']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'dateKey': serializer.toJson<String>(dateKey),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'amount': serializer.toJson<double>(amount),
+      'note': serializer.toJson<String?>(note),
+      'category': serializer.toJson<String?>(category),
+    };
+  }
+
+  CharityRecordRow copyWith({
+    int? id,
+    String? dateKey,
+    DateTime? createdAt,
+    double? amount,
+    Value<String?> note = const Value.absent(),
+    Value<String?> category = const Value.absent(),
+  }) => CharityRecordRow(
+    id: id ?? this.id,
+    dateKey: dateKey ?? this.dateKey,
+    createdAt: createdAt ?? this.createdAt,
+    amount: amount ?? this.amount,
+    note: note.present ? note.value : this.note,
+    category: category.present ? category.value : this.category,
+  );
+  CharityRecordRow copyWithCompanion(CharityRecordsTableCompanion data) {
+    return CharityRecordRow(
+      id: data.id.present ? data.id.value : this.id,
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      note: data.note.present ? data.note.value : this.note,
+      category: data.category.present ? data.category.value : this.category,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CharityRecordRow(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('amount: $amount, ')
+          ..write('note: $note, ')
+          ..write('category: $category')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, dateKey, createdAt, amount, note, category);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CharityRecordRow &&
+          other.id == this.id &&
+          other.dateKey == this.dateKey &&
+          other.createdAt == this.createdAt &&
+          other.amount == this.amount &&
+          other.note == this.note &&
+          other.category == this.category);
+}
+
+class CharityRecordsTableCompanion extends UpdateCompanion<CharityRecordRow> {
+  final Value<int> id;
+  final Value<String> dateKey;
+  final Value<DateTime> createdAt;
+  final Value<double> amount;
+  final Value<String?> note;
+  final Value<String?> category;
+  const CharityRecordsTableCompanion({
+    this.id = const Value.absent(),
+    this.dateKey = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.note = const Value.absent(),
+    this.category = const Value.absent(),
+  });
+  CharityRecordsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String dateKey,
+    required DateTime createdAt,
+    required double amount,
+    this.note = const Value.absent(),
+    this.category = const Value.absent(),
+  }) : dateKey = Value(dateKey),
+       createdAt = Value(createdAt),
+       amount = Value(amount);
+  static Insertable<CharityRecordRow> custom({
+    Expression<int>? id,
+    Expression<String>? dateKey,
+    Expression<DateTime>? createdAt,
+    Expression<double>? amount,
+    Expression<String>? note,
+    Expression<String>? category,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dateKey != null) 'date_key': dateKey,
+      if (createdAt != null) 'created_at': createdAt,
+      if (amount != null) 'amount': amount,
+      if (note != null) 'note': note,
+      if (category != null) 'category': category,
+    });
+  }
+
+  CharityRecordsTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? dateKey,
+    Value<DateTime>? createdAt,
+    Value<double>? amount,
+    Value<String?>? note,
+    Value<String?>? category,
+  }) {
+    return CharityRecordsTableCompanion(
+      id: id ?? this.id,
+      dateKey: dateKey ?? this.dateKey,
+      createdAt: createdAt ?? this.createdAt,
+      amount: amount ?? this.amount,
+      note: note ?? this.note,
+      category: category ?? this.category,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CharityRecordsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('amount: $amount, ')
+          ..write('note: $note, ')
+          ..write('category: $category')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $QuranBookmarksTable quranBookmarks = $QuranBookmarksTable(this);
   late final $UserSettingsTableTable userSettingsTable =
       $UserSettingsTableTable(this);
+  late final $CharityRecordsTableTable charityRecordsTable =
+      $CharityRecordsTableTable(this);
+  late final Index idxCharityRecordsDateKey = Index(
+    'idx_charity_records_date_key',
+    'CREATE INDEX idx_charity_records_date_key ON charity_records (date_key)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1228,6 +1631,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     quranBookmarks,
     userSettingsTable,
+    charityRecordsTable,
+    idxCharityRecordsDateKey,
   ];
 }
 
@@ -1827,6 +2232,235 @@ typedef $$UserSettingsTableTableProcessedTableManager =
       UserSettingsRow,
       PrefetchHooks Function()
     >;
+typedef $$CharityRecordsTableTableCreateCompanionBuilder =
+    CharityRecordsTableCompanion Function({
+      Value<int> id,
+      required String dateKey,
+      required DateTime createdAt,
+      required double amount,
+      Value<String?> note,
+      Value<String?> category,
+    });
+typedef $$CharityRecordsTableTableUpdateCompanionBuilder =
+    CharityRecordsTableCompanion Function({
+      Value<int> id,
+      Value<String> dateKey,
+      Value<DateTime> createdAt,
+      Value<double> amount,
+      Value<String?> note,
+      Value<String?> category,
+    });
+
+class $$CharityRecordsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $CharityRecordsTableTable> {
+  $$CharityRecordsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CharityRecordsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $CharityRecordsTableTable> {
+  $$CharityRecordsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CharityRecordsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CharityRecordsTableTable> {
+  $$CharityRecordsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+}
+
+class $$CharityRecordsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CharityRecordsTableTable,
+          CharityRecordRow,
+          $$CharityRecordsTableTableFilterComposer,
+          $$CharityRecordsTableTableOrderingComposer,
+          $$CharityRecordsTableTableAnnotationComposer,
+          $$CharityRecordsTableTableCreateCompanionBuilder,
+          $$CharityRecordsTableTableUpdateCompanionBuilder,
+          (
+            CharityRecordRow,
+            BaseReferences<
+              _$AppDatabase,
+              $CharityRecordsTableTable,
+              CharityRecordRow
+            >,
+          ),
+          CharityRecordRow,
+          PrefetchHooks Function()
+        > {
+  $$CharityRecordsTableTableTableManager(
+    _$AppDatabase db,
+    $CharityRecordsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CharityRecordsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CharityRecordsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CharityRecordsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> dateKey = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+              }) => CharityRecordsTableCompanion(
+                id: id,
+                dateKey: dateKey,
+                createdAt: createdAt,
+                amount: amount,
+                note: note,
+                category: category,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String dateKey,
+                required DateTime createdAt,
+                required double amount,
+                Value<String?> note = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+              }) => CharityRecordsTableCompanion.insert(
+                id: id,
+                dateKey: dateKey,
+                createdAt: createdAt,
+                amount: amount,
+                note: note,
+                category: category,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CharityRecordsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CharityRecordsTableTable,
+      CharityRecordRow,
+      $$CharityRecordsTableTableFilterComposer,
+      $$CharityRecordsTableTableOrderingComposer,
+      $$CharityRecordsTableTableAnnotationComposer,
+      $$CharityRecordsTableTableCreateCompanionBuilder,
+      $$CharityRecordsTableTableUpdateCompanionBuilder,
+      (
+        CharityRecordRow,
+        BaseReferences<
+          _$AppDatabase,
+          $CharityRecordsTableTable,
+          CharityRecordRow
+        >,
+      ),
+      CharityRecordRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1835,4 +2469,6 @@ class $AppDatabaseManager {
       $$QuranBookmarksTableTableManager(_db, _db.quranBookmarks);
   $$UserSettingsTableTableTableManager get userSettingsTable =>
       $$UserSettingsTableTableTableManager(_db, _db.userSettingsTable);
+  $$CharityRecordsTableTableTableManager get charityRecordsTable =>
+      $$CharityRecordsTableTableTableManager(_db, _db.charityRecordsTable);
 }

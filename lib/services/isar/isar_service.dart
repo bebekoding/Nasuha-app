@@ -8,7 +8,6 @@ import '../../core/constants/seed_achievements.dart';
 import '../../core/constants/seed_tags.dart';
 import '../../models/achievement.dart';
 import '../../models/cached_surah.dart';
-import '../../models/charity_record.dart';
 import '../../models/daily_score.dart';
 import '../../models/muhasabah_entry.dart';
 import '../../models/muhasabah_tag.dart';
@@ -28,7 +27,6 @@ class IsarService {
     MuhasabahTagSchema,
     MuhasabahEntrySchema,
     DailyScoreSchema,
-    CharityRecordSchema,
     AchievementSchema,
     StreakSchema,
     QuranBookmarkSchema,

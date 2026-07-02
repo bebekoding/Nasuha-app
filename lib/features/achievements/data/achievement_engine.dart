@@ -3,8 +3,8 @@ import 'package:isar/isar.dart';
 
 import '../../../core/extensions/date_extensions.dart';
 import '../../../models/achievement.dart';
-import '../../../models/charity_record.dart';
 import '../../../models/muhasabah_entry.dart';
+import '../../../services/database/app_database.dart';
 import '../../../services/isar/isar_service.dart';
 
 /// Recomputes progress for every seeded achievement from current data.
@@ -13,8 +13,9 @@ import '../../../services/isar/isar_service.dart';
 /// indexed `dateKey` and `tagSlug` columns return instantly for the data
 /// volumes a personal journal will ever produce.
 class AchievementEngine {
-  AchievementEngine(this._service);
+  AchievementEngine(this._service, this._db);
   final IsarService _service;
+  final AppDatabase _db;
   Isar get _isar => _service.isar;
 
   static const _fivePrayers = {
@@ -31,7 +32,10 @@ class AchievementEngine {
 
     // Pre-fetch everything once; cheaper than 7 separate queries.
     final entries = await _isar.muhasabahEntrys.where().findAll();
-    final charityCount = await _isar.charityRecords.count();
+    final charityCount = await _db
+        .customSelect('SELECT COUNT(*) AS c FROM charity_records')
+        .map((row) => row.read<int>('c'))
+        .getSingle();
 
     // Group entries by date for fast lookup.
     final entriesByDate = <String, List<String>>{};
@@ -108,5 +112,8 @@ class AchievementEngine {
 }
 
 final achievementEngineProvider = Provider<AchievementEngine>((ref) {
-  return AchievementEngine(ref.watch(isarServiceProvider));
+  return AchievementEngine(
+    ref.watch(isarServiceProvider),
+    ref.watch(appDatabaseProvider),
+  );
 });

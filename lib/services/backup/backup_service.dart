@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../models/charity_record.dart';
+import 'package:drift/drift.dart' show countAll;
+
 import '../../models/muhasabah_entry.dart';
 import '../database/app_database.dart';
 import '../isar/isar_service.dart';
@@ -25,12 +26,14 @@ class BackupService {
     required DriveBackupClient drive,
     BackupCrypto? crypto,
   })  : _isar = isarService,
+        _db = db,
         _serializer = BackupSerializer(isarService.isar, db),
         _drive = drive,
         _crypto = crypto ?? BackupCrypto();
 
 
   final IsarService _isar;
+  final AppDatabase _db;
   final BackupSerializer _serializer;
   final DriveBackupClient _drive;
   final BackupCrypto _crypto;
@@ -40,7 +43,10 @@ class BackupService {
   /// should offer to restore a cloud backup.
   Future<bool> hasLocalData() async {
     final entries = await _isar.isar.muhasabahEntrys.count();
-    final charity = await _isar.isar.charityRecords.count();
+    final charityQuery = _db.selectOnly(_db.charityRecordsTable)
+      ..addColumns([countAll()]);
+    final charity =
+        (await charityQuery.map((row) => row.read(countAll())).getSingle()) ?? 0;
     return entries > 0 || charity > 0;
   }
 

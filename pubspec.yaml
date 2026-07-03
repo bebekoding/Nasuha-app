@@ -25,6 +25,9 @@ dependencies:
 
   # Cloud backup (Google Drive App Folder — user owns their data)
   google_sign_in: ^6.2.2
+  # Explicit web plugin — dibutuhkan supaya build web pakai Google Identity
+  # Services (GIS). Client_id di web/index.html meta tag.
+  google_sign_in_web: ^0.12.4+4
   googleapis: ^13.2.0
   googleapis_auth: ^1.6.0
   extension_google_sign_in_as_googleapis_auth: ^2.0.12

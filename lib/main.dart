@@ -12,6 +12,7 @@ import 'core/constants/app_constants.dart';
 import 'core/extensions/date_extensions.dart';
 import 'features/achievements/data/achievement_engine.dart';
 import 'services/database/app_database.dart';
+import 'services/database/legacy_isar_check.dart';
 import 'services/database/seed.dart';
 import 'services/dev/dummy_seeder.dart';
 import 'services/notification/notification_service.dart';
@@ -51,6 +52,19 @@ Future<void> _bootstrap() async {
     _log('step: seedDrift OK');
   } catch (e, s) {
     _log('⚠️ seedDrift failed (non-fatal): $e\n$s');
+  }
+
+  // Deteksi data dari versi Isar (v1.1.3 dan sebelumnya). Kalau ada, file
+  // di-rename ke legacy-isar-backup.bin + flag di-set supaya dialog restore
+  // muncul di HomeScreen sekali. Best-effort, tidak crash bootstrap.
+  try {
+    final legacy = await detectAndPreserveLegacyIsar();
+    if (legacy && !(prefs.getBool(kLegacyIsarHandledPref) ?? false)) {
+      await prefs.setBool(kLegacyIsarDetectedPref, true);
+      _log('step: legacy Isar data detected → prompt scheduled');
+    }
+  } catch (e, s) {
+    _log('⚠️ legacy Isar check failed (non-fatal): $e\n$s');
   }
 
   if (kSeedDummyData) {

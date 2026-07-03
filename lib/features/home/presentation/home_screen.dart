@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../config/theme/theme_controller.dart' show sharedPrefsProvider;
 import '../../../core/constants/app_strings.dart';
+import '../../../services/database/legacy_isar_check.dart';
 import '../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
 import '../../muhasabah/presentation/providers/muhasabah_providers.dart';
 import '../../muhasabah/presentation/widgets/score_card.dart';
@@ -32,7 +34,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
     // Play the staggered reveal once after the first frame. The controller
     // lives in State, so provider-driven rebuilds (score, prayer) don't restart it.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _entrance.forward());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _entrance.forward();
+      _maybeShowLegacyIsarPrompt();
+    });
+  }
+
+  Future<void> _maybeShowLegacyIsarPrompt() async {
+    final prefs = ref.read(sharedPrefsProvider);
+    final detected = prefs.getBool(kLegacyIsarDetectedPref) ?? false;
+    final handled = prefs.getBool(kLegacyIsarHandledPref) ?? false;
+    if (!detected || handled) return;
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.upgrade),
+        title: const Text('Data versi lama terdeteksi'),
+        content: const Text(
+          'Kamu upgrade Nasuha dari versi lama (v1.1.x atau sebelumnya). '
+          'Karena mesin database berganti, data lama tidak otomatis '
+          'dipindah.\n\n'
+          'Kalau ada backup (file .mhsb atau di Google Drive), silakan '
+          'pulihkan lewat Pengaturan → Akun & Pemulihan. Data lama tetap '
+          'disimpan aman di HP sebagai legacy-isar-backup.bin.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Fire-and-forget; UI tak menunggu I/O sync.
+              prefs.setBool(kLegacyIsarHandledPref, true);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Nanti saja'),
+          ),
+          FilledButton(
+            onPressed: () {
+              prefs.setBool(kLegacyIsarHandledPref, true);
+              Navigator.pop(ctx);
+              context.push('/backup');
+            },
+            child: const Text('Ke halaman pemulihan'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

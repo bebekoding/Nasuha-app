@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -5,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../../core/constants/app_constants.dart';
 import 'prayer_confirm.dart';
+import 'web_notifier.dart' if (dart.library.io) 'web_notifier_stub.dart';
 
 /// iOS/macOS notification category that carries the "✅ Sudah sholat" action.
 const String kPrayerConfirmCategory = 'prayer_confirm';
@@ -17,6 +19,11 @@ class NotificationService {
 
   Future<void> init() async {
     if (_initialized) return;
+    if (kIsWeb) {
+      // Browser Notification API tidak butuh init; WebNotifier siap dipanggil.
+      _initialized = true;
+      return;
+    }
     tz.initializeTimeZones();
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -50,6 +57,10 @@ class NotificationService {
   /// dialog the first time. Result is ignored; user can re-grant later in
   /// system settings.
   Future<void> requestPermissions() async {
+    if (kIsWeb) {
+      await WebNotifier.instance.requestPermission();
+      return;
+    }
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -70,6 +81,16 @@ class NotificationService {
     required String body,
     required DateTime when,
   }) async {
+    if (kIsWeb) {
+      WebNotifier.instance.schedule(
+        id: id,
+        title: title,
+        body: body,
+        when: when,
+        tag: 'adhan-$id',
+      );
+      return;
+    }
     final scheduled = tz.TZDateTime.from(when, tz.local);
     if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) return;
 
@@ -104,6 +125,18 @@ class NotificationService {
     required String dateKey,
     required DateTime when,
   }) async {
+    if (kIsWeb) {
+      // Web tidak mendukung notification action button reliably; jadikan
+      // reminder polos. Klik notif akan bawa user ke app (default).
+      WebNotifier.instance.schedule(
+        id: id,
+        title: 'Sudah sholat $prayerName? 🤲',
+        body: 'Waktu $prayerName hampir habis. Buka Nasuha untuk menandai.',
+        when: when,
+        tag: 'prayer-confirm-$id',
+      );
+      return;
+    }
     final scheduled = tz.TZDateTime.from(when, tz.local);
     if (scheduled.isBefore(tz.TZDateTime.now(tz.local))) return;
 
@@ -173,7 +206,13 @@ class NotificationService {
     );
   }
 
-  Future<void> cancelAll() => _plugin.cancelAll();
+  Future<void> cancelAll() {
+    if (kIsWeb) {
+      WebNotifier.instance.cancelAll();
+      return Future.value();
+    }
+    return _plugin.cancelAll();
+  }
 }
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {

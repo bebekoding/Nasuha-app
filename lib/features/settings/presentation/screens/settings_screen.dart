@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../config/theme/theme_controller.dart';
+import '../../../../services/notification/web_notifier.dart'
+    if (dart.library.io) '../../../../services/notification/web_notifier_stub.dart';
 import '../../../muhasabah/data/repositories/muhasabah_repository.dart';
 import '../../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
 import '../providers/settings_providers.dart';
@@ -83,17 +86,81 @@ class SettingsScreen extends ConsumerWidget {
           SwitchListTile(
             secondary: const Icon(Icons.notifications_active_outlined),
             title: const Text('Notifikasi adzan'),
+            subtitle: kIsWeb
+                ? const Text(
+                    'Web: hanya berjalan saat tab Nasuha terbuka.',
+                    style: TextStyle(fontSize: 12),
+                  )
+                : null,
             value: settings.adhanNotifications,
-            onChanged: (v) =>
-                settingsCtrl.update((s) => s..adhanNotifications = v),
+            onChanged: (v) async {
+              if (v && kIsWeb) {
+                final granted =
+                    await WebNotifier.instance.requestPermission();
+                if (!granted) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'Izin notifikasi ditolak browser. Aktifkan lewat setting browser.'),
+                  ));
+                  return;
+                }
+              }
+              settingsCtrl.update((s) => s..adhanNotifications = v);
+            },
           ),
           SwitchListTile(
             secondary: const Icon(Icons.alarm),
             title: const Text('Pengingat ibadah'),
+            subtitle: kIsWeb
+                ? const Text(
+                    'Web: hanya berjalan saat tab Nasuha terbuka.',
+                    style: TextStyle(fontSize: 12),
+                  )
+                : null,
             value: settings.reminderNotifications,
-            onChanged: (v) =>
-                settingsCtrl.update((s) => s..reminderNotifications = v),
+            onChanged: (v) async {
+              if (v && kIsWeb) {
+                final granted =
+                    await WebNotifier.instance.requestPermission();
+                if (!granted) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'Izin notifikasi ditolak browser. Aktifkan lewat setting browser.'),
+                  ));
+                  return;
+                }
+              }
+              settingsCtrl.update((s) => s..reminderNotifications = v);
+            },
           ),
+          if (kIsWeb)
+            ListTile(
+              leading: const Icon(Icons.notifications_none),
+              title: const Text('Tes notifikasi web'),
+              subtitle: const Text(
+                  'Kirim satu notifikasi sekarang untuk memastikan izin browser aktif'),
+              trailing: const Icon(Icons.play_arrow),
+              onTap: () async {
+                final n = WebNotifier.instance;
+                if (n.permission != 'granted') {
+                  final ok = await n.requestPermission();
+                  if (!ok) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Izin notifikasi belum aktif.'),
+                    ));
+                    return;
+                  }
+                }
+                n.show(
+                  title: 'Nasuha ✅',
+                  body: 'Notifikasi web bekerja. Selamat!',
+                  tag: 'test',
+                );
+              },
+            ),
           const Divider(),
           const _SectionTitle('Privasi & Keamanan'),
           SwitchListTile(

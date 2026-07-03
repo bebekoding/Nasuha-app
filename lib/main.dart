@@ -61,16 +61,14 @@ Future<void> _bootstrap() async {
   }
 
   final notif = NotificationService();
-  if (!kIsWeb) {
-    try {
-      await notif.init();
-      unawaited(notif.requestPermissions());
-      _log('step: NotificationService OK');
-    } catch (e, s) {
-      _log('⚠️ Notification init failed (non-fatal): $e\n$s');
-    }
-  } else {
-    _log('step: Notification skipped (web)');
+  try {
+    await notif.init();
+    // Native: prompt langsung. Web: jangan prompt otomatis (browser hanya
+    // izinkan user-gesture), user diminta explicit dari Settings.
+    if (!kIsWeb) unawaited(notif.requestPermissions());
+    _log('step: NotificationService OK');
+  } catch (e, s) {
+    _log('⚠️ Notification init failed (non-fatal): $e\n$s');
   }
 
   if (kTestPrayerConfirm) {

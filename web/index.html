@@ -52,6 +52,23 @@
       var el = document.getElementById('loading');
       if (el) el.remove();
     });
+
+    // Helper untuk Dart js_interop — Notification constructor tidak bisa
+    // dipanggil langsung via `@JS()` external function.
+    window.nasuhaShowNotification = function (title, body, tag, icon) {
+      if (typeof Notification === 'undefined') return;
+      if (Notification.permission !== 'granted') return;
+      try {
+        new Notification(title, {
+          body: body,
+          tag: tag || 'nasuha',
+          icon: icon || '/icons/Icon-192.png',
+          badge: '/icons/Icon-192.png',
+        });
+      } catch (e) {
+        console.warn('[Nasuha] notif failed:', e);
+      }
+    };
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

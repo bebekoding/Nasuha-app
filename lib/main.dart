@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -41,10 +42,20 @@ Future<void> main() async {
   }
 
   final notif = NotificationService();
-  await notif.init();
-  // Jangan blokir startup menunggu jawaban dialog izin (khususnya iOS) —
-  // biarkan UI tampil lebih dulu, dialog muncul di atasnya.
-  unawaited(notif.requestPermissions());
+  if (!kIsWeb) {
+    // flutter_local_notifications tak punya implementasi web → skip init.
+    // (Nanti bisa dipasang alternatif berbasis Web Notification API.)
+    try {
+      await notif.init();
+      // Jangan blokir startup menunggu jawaban dialog izin (khususnya iOS) —
+      // biarkan UI tampil lebih dulu, dialog muncul di atasnya.
+      unawaited(notif.requestPermissions());
+    } catch (e, s) {
+      // Non-fatal: log & lanjut supaya splash tidak nyangkut.
+      // ignore: avoid_print
+      print('Notification init failed (non-fatal): $e\n$s');
+    }
+  }
 
   if (kTestPrayerConfirm) {
     await notif.showPrayerConfirmNow(

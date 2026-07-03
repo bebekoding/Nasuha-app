@@ -46,6 +46,13 @@
     <div class="dot"></div>
     <div class="dot"></div>
   </div>
+  <script>
+    // Hilangkan splash HTML begitu Flutter selesai mount UI-nya.
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('loading');
+      if (el) el.remove();
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

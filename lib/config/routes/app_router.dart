@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/web_frame.dart';
 import '../../features/achievements/presentation/screens/achievements_screen.dart';
+import '../../features/analytics/presentation/screens/analytics_desktop_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_detail_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_screen.dart';
@@ -22,6 +23,7 @@ import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/prayer_time/presentation/screens/prayer_time_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/qibla/presentation/screens/qibla_screen.dart';
+import '../../features/rank/presentation/screens/rank_desktop_screen.dart';
 import '../../features/rank/presentation/screens/rank_screen.dart';
 import '../../features/quran/presentation/screens/quran_desktop_screen.dart';
 import '../../features/quran/presentation/screens/quran_screen.dart';
@@ -100,7 +102,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => _framed(const PrayerTimeScreen())),
       GoRoute(
           path: '/qibla', builder: (_, __) => _framed(const QiblaScreen())),
-      GoRoute(path: '/rank', builder: (_, __) => _framed(const RankScreen())),
+      GoRoute(
+        path: '/rank',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const RankDesktopScreen(),
+          const RankScreen(),
+        ),
+      ),
       GoRoute(
         path: '/quran',
         builder: (ctx, __) => _desktopOr(
@@ -132,8 +141,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path: '/sedekah/recap',
           builder: (_, __) => _framed(const SedekahRecapScreen())),
       GoRoute(
-          path: '/analytics',
-          builder: (_, __) => _framed(const AnalyticsScreen())),
+        path: '/analytics',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const AnalyticsDesktopScreen(),
+          const AnalyticsScreen(),
+        ),
+      ),
       GoRoute(
           path: '/achievements',
           builder: (_, __) => _framed(const AchievementsScreen())),

@@ -26,13 +26,32 @@ const bool kSeedDummyData = false;
 const bool kTestPrayerConfirm = false;
 
 Future<void> main() async {
+  runZonedGuarded(_bootstrap, (error, stack) {
+    // ignore: avoid_print
+    print('❌ Uncaught in main: $error\n$stack');
+    runApp(_FatalErrorApp(error: error, stack: stack));
+  });
+}
+
+Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _log('step: ensureInitialized OK');
 
   await initializeDateFormatting('id_ID');
+  _log('step: initializeDateFormatting OK');
 
   final prefs = await SharedPreferences.getInstance();
+  _log('step: SharedPreferences OK');
+
   final appDb = AppDatabase();
-  await seedDrift(appDb);
+  _log('step: AppDatabase created');
+
+  try {
+    await seedDrift(appDb);
+    _log('step: seedDrift OK');
+  } catch (e, s) {
+    _log('⚠️ seedDrift failed (non-fatal): $e\n$s');
+  }
 
   if (kSeedDummyData) {
     await DummySeeder(appDb).seed();
@@ -43,18 +62,15 @@ Future<void> main() async {
 
   final notif = NotificationService();
   if (!kIsWeb) {
-    // flutter_local_notifications tak punya implementasi web → skip init.
-    // (Nanti bisa dipasang alternatif berbasis Web Notification API.)
     try {
       await notif.init();
-      // Jangan blokir startup menunggu jawaban dialog izin (khususnya iOS) —
-      // biarkan UI tampil lebih dulu, dialog muncul di atasnya.
       unawaited(notif.requestPermissions());
+      _log('step: NotificationService OK');
     } catch (e, s) {
-      // Non-fatal: log & lanjut supaya splash tidak nyangkut.
-      // ignore: avoid_print
-      print('Notification init failed (non-fatal): $e\n$s');
+      _log('⚠️ Notification init failed (non-fatal): $e\n$s');
     }
+  } else {
+    _log('step: Notification skipped (web)');
   }
 
   if (kTestPrayerConfirm) {
@@ -68,6 +84,7 @@ Future<void> main() async {
     });
   }
 
+  _log('step: runApp');
   runApp(
     ProviderScope(
       overrides: [
@@ -78,4 +95,64 @@ Future<void> main() async {
       child: const MuhasabahApp(),
     ),
   );
+}
+
+void _log(String msg) {
+  // ignore: avoid_print
+  print('[Nasuha bootstrap] $msg');
+}
+
+/// UI minimal yang dirender kalau [main] crash — supaya tidak blank screen.
+class _FatalErrorApp extends StatelessWidget {
+  const _FatalErrorApp({required this.error, required this.stack});
+  final Object error;
+  final StackTrace stack;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: const Color(0xFFF4ECDD),
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Gagal memuat Nasuha',
+                    style: TextStyle(
+                      color: Color(0xFF3B2E22),
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SelectableText(
+                    error.toString(),
+                    style: const TextStyle(
+                      color: Color(0xFFB5613F),
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SelectableText(
+                    stack.toString(),
+                    style: const TextStyle(
+                      color: Color(0xFF8A5A3A),
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

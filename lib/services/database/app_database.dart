@@ -77,12 +77,17 @@ class AppDatabase extends _$AppDatabase {
       );
 }
 
-/// Pilih executor sesuai platform. `drift_flutter` otomatis pakai:
-///   - iOS/Android/macOS: sqlite3_flutter_libs (native)
-///   - Web: sqlite3.wasm + IndexedDB (perlu setup `sqlite3.wasm` +
-///     `drift_worker.js` di folder `web/` sebelum build web)
+/// Pilih executor sesuai platform. `drift_flutter` menerima opsi platform
+/// eksplisit — web butuh URL relatif untuk `sqlite3.wasm` + `drift_worker.js`
+/// (kedua file dilayani dari root situs oleh Vercel).
 QueryExecutor _open() {
-  return driftDatabase(name: 'nasuha_db');
+  return driftDatabase(
+    name: 'nasuha_db',
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.js'),
+    ),
+  );
 }
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {

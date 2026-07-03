@@ -14,7 +14,8 @@ class PrayerRepository {
   final AppDatabase _db;
 
   Future<PrayerSchedule?> getTodaySchedule({String? methodOverride}) async {
-    final settings = await _db.select(_db.userSettingsTable).getSingleOrNull();
+    final settings =
+        await (_db.select(_db.userSettingsTable)..limit(1)).getSingleOrNull();
     double? lat = settings?.lastLatitude;
     double? lng = settings?.lastLongitude;
     String? savedLocationName = settings?.city;

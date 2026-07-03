@@ -18,22 +18,36 @@ class SettingsController extends StateNotifier<UserSettings> {
   }
 
   final AppDatabase _db;
-  StreamSubscription<UserSettingsRow?>? _sub;
+  StreamSubscription<List<UserSettingsRow>>? _sub;
 
   Future<void> _bootstrap() async {
-    _sub = _db
-        .select(_db.userSettingsTable)
-        .watchSingleOrNull()
-        .listen((row) {
-      if (row == null) return; // seeded by migration; watch will fire again
-      state = _rowToDomain(row);
+    // Defensive: buang baris duplikat kalau ada (pernah kejadian di IndexedDB
+    // web dari migrasi lawas). Pertahankan yg id terkecil sebagai singleton.
+    await _ensureSingleton();
+
+    // watch() + first-or-null biar aman kalau by any chance masih ada >1 row
+    // (tak throw seperti watchSingleOrNull).
+    _sub = _db.select(_db.userSettingsTable).watch().listen((rows) {
+      if (rows.isEmpty) return;
+      state = _rowToDomain(rows.first);
     });
+  }
+
+  Future<void> _ensureSingleton() async {
+    final rows = await _db.select(_db.userSettingsTable).get();
+    if (rows.length <= 1) return;
+    // Sisakan baris pertama, hapus sisanya.
+    final keepId = rows.first.id;
+    await (_db.delete(_db.userSettingsTable)
+          ..where((t) => t.id.isNotValue(keepId)))
+        .go();
   }
 
   Future<void> update(UserSettings Function(UserSettings) mutate) async {
     final next = mutate(state);
     await _db.into(_db.userSettingsTable).insertOnConflictUpdate(
           UserSettingsTableCompanion.insert(
+            id: const Value(1), // singleton — hindari default-implicit
             displayName: Value(next.displayName),
             photoPath: Value(next.photoPath),
             city: Value(next.city),

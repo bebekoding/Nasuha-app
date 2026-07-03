@@ -18,7 +18,8 @@ class PrayerNotificationScheduler {
   final AppDatabase _db;
 
   Future<void> scheduleNext48h() async {
-    final row = await _db.select(_db.userSettingsTable).getSingleOrNull();
+    final row =
+        await (_db.select(_db.userSettingsTable)..limit(1)).getSingleOrNull();
     final settings = row == null
         ? UserSettings()
         : UserSettings(

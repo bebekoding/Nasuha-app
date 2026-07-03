@@ -57,7 +57,7 @@ class BackupSerializer {
     final achievementRows = await db.select(db.achievementsTable).get();
     final bookmarkRows = await db.select(db.quranBookmarks).get();
     final settingsRow =
-        await db.select(db.userSettingsTable).getSingleOrNull();
+        await (db.select(db.userSettingsTable)..limit(1)).getSingleOrNull();
     final settings = settingsRow == null ? null : _settingsFromRow(settingsRow);
 
     final collections = <String, List<Map<String, dynamic>>>{

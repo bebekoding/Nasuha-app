@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +8,7 @@ import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_detail_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/landing/presentation/landing_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_history_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_intro_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_screen.dart';
@@ -35,7 +38,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/onboarding',
           builder: (_, __) => const OnboardingScreen()),
-      GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+      GoRoute(
+        path: '/',
+        builder: (ctx, __) {
+          // Gate: PC web (≥900px) → LandingScreen marketing.
+          // Mobile / non-web / narrow viewport → HomeScreen dashboard.
+          final width = MediaQuery.of(ctx).size.width;
+          if (kIsWeb && width >= 900) return const LandingScreen();
+          return const HomeScreen();
+        },
+      ),
+      GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
       GoRoute(
           path: '/muhasabah',
           builder: (_, __) => const MuhasabahScreen()),

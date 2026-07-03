@@ -1,33 +1,33 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
 import '../../../models/achievement.dart';
-import '../../../services/isar/isar_service.dart';
+import '../../../services/database/app_database.dart';
 
 class AchievementRepository {
-  AchievementRepository(this._service);
-  final IsarService _service;
-  Isar get _isar => _service.isar;
+  AchievementRepository(this._db);
+  final AppDatabase _db;
 
-  Stream<List<Achievement>> watch() =>
-      _isar.achievements.where().watch(fireImmediately: true);
-
-  Future<void> updateProgress(String code, int value) async {
-    final a = await _isar.achievements.filter().codeEqualTo(code).findFirst();
-    if (a == null) return;
-    await _isar.writeTxn(() async {
-      a.currentValue = value;
-      if (a.currentValue >= a.targetValue && a.unlockedAt == null) {
-        a.unlockedAt = DateTime.now();
-      }
-      await _isar.achievements.put(a);
-    });
+  Stream<List<Achievement>> watch() {
+    return _db
+        .select(_db.achievementsTable)
+        .watch()
+        .map((rows) => rows.map(_fromRow).toList());
   }
+
+  Achievement _fromRow(AchievementRow r) => Achievement(
+        id: r.id,
+        code: r.code,
+        title: r.title,
+        description: r.description,
+        targetValue: r.targetValue,
+        currentValue: r.currentValue,
+        unlockedAt: r.unlockedAt,
+      );
 }
 
 final achievementRepositoryProvider =
     Provider<AchievementRepository>((ref) {
-  return AchievementRepository(ref.watch(isarServiceProvider));
+  return AchievementRepository(ref.watch(appDatabaseProvider));
 });
 
 final achievementsProvider = StreamProvider<List<Achievement>>((ref) {

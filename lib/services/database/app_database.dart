@@ -10,18 +10,19 @@ part 'tables/muhasabah_tags_table.dart';
 part 'tables/muhasabah_entries_table.dart';
 part 'tables/daily_scores_table.dart';
 part 'tables/streaks_table.dart';
+part 'tables/achievements_table.dart';
 
 /// Database utama Nasuha (Drift) — menggantikan Isar bertahap untuk mendukung
 /// PWA (jalan di mobile via native sqlite dan di browser via sqlite-wasm).
 ///
 /// Setiap collection Isar akan dipindahkan satu per satu ke tabel di sini.
-/// Tabel yang sudah dimigrasi (per Jul 2 2026):
+/// Semua tabel Nasuha (per Jul 2 2026) — migrasi Isar → Drift SELESAI.
+/// Isar sudah tidak dipakai lagi; runtime DB tunggal via Drift.
 ///   - QuranBookmarks
 ///   - UserSettingsTable (singleton, id=1)
 ///   - CharityRecordsTable
 ///   - MuhasabahTagsTable, MuhasabahEntriesTable, DailyScoresTable, StreaksTable
-/// Belum dimigrasi (masih Isar):
-///   - Achievement, CachedSurah
+///   - AchievementsTable
 @DriftDatabase(tables: [
   QuranBookmarks,
   UserSettingsTable,
@@ -30,6 +31,7 @@ part 'tables/streaks_table.dart';
   MuhasabahEntriesTable,
   DailyScoresTable,
   StreaksTable,
+  AchievementsTable,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_open());
@@ -38,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -64,6 +66,9 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(muhasabahEntriesTable);
             await m.createTable(dailyScoresTable);
             await m.createTable(streaksTable);
+          }
+          if (from < 5) {
+            await m.createTable(achievementsTable);
           }
           // Indeks dateKey akan dibuat otomatis via createAll saat instalasi
           // baru; untuk upgrade dilewati (query tetap jalan tanpa indeks —

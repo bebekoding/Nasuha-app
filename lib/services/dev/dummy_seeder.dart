@@ -6,13 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/extensions/date_extensions.dart';
 import '../../models/muhasabah_tag.dart';
 import '../database/app_database.dart';
-import '../isar/isar_service.dart';
 
 /// DEV-ONLY: fills the database with ~45 days of plausible muhasabah/sedekah
 /// data. Semua tulis ke Drift (Isar tak lagi menyimpan tags/entries/scores).
 class DummySeeder {
-  DummySeeder(this._service, this._db);
-  final IsarService _service; // ignore: unused_field  (buat future-proof)
+  DummySeeder(this._db);
   final AppDatabase _db;
 
   static const _days = 45;
@@ -192,8 +190,5 @@ class DummySeeder {
 }
 
 final dummySeederProvider = Provider<DummySeeder>((ref) {
-  return DummySeeder(
-    ref.watch(isarServiceProvider),
-    ref.watch(appDatabaseProvider),
-  );
+  return DummySeeder(ref.watch(appDatabaseProvider));
 });

@@ -1,11 +1,8 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
-import 'package:isar/isar.dart';
 
-import '../../models/achievement.dart';
 import '../../models/charity_record.dart';
-import '../../models/quran_bookmark.dart';
 import '../../models/user_settings.dart';
 import '../database/app_database.dart';
 
@@ -42,8 +39,7 @@ class BackupPayload {
 }
 
 class BackupSerializer {
-  BackupSerializer(this.isar, this.db);
-  final Isar isar;
+  BackupSerializer(this.db);
   final AppDatabase db;
 
   Future<String> exportToJsonString() async {
@@ -58,8 +54,8 @@ class BackupSerializer {
     final charityRows = await db.select(db.charityRecordsTable).get();
     final charity = charityRows.map(_charityFromRow).toList();
     final streakRows = await db.select(db.streaksTable).get();
-    final achievements = await isar.achievements.where().findAll();
-    final bookmarks = await isar.quranBookmarks.where().findAll();
+    final achievementRows = await db.select(db.achievementsTable).get();
+    final bookmarkRows = await db.select(db.quranBookmarks).get();
     final settingsRow =
         await db.select(db.userSettingsTable).getSingleOrNull();
     final settings = settingsRow == null ? null : _settingsFromRow(settingsRow);
@@ -69,9 +65,9 @@ class BackupSerializer {
       'muhasabahEntries': entryRows.map(_entryFromRowToJson).toList(),
       'dailyScores': scoreRows.map(_scoreFromRowToJson).toList(),
       'charityRecords': charity.map(_charityToJson).toList(),
-      'achievements': achievements.map(_achievementToJson).toList(),
+      'achievements': achievementRows.map(_achievementFromRowToJson).toList(),
       'streaks': streakRows.map(_streakFromRowToJson).toList(),
-      'quranBookmarks': bookmarks.map(_bookmarkToJson).toList(),
+      'quranBookmarks': bookmarkRows.map(_bookmarkFromRowToJson).toList(),
     };
     if (settings != null) {
       collections['userSettings'] = [_settingsToJson(settings)];
@@ -93,27 +89,45 @@ class BackupSerializer {
           'Backup ini dibuat dengan versi aplikasi yang lebih baru. '
           'Mohon perbarui aplikasi terlebih dahulu.');
     }
-    await isar.writeTxn(() async {
-      // Yang masih Isar: achievements + quranBookmarks (bookmark schema masih
-      // orphan; data quran bookmark aktif di Drift, tapi legacy Isar tabel
-      // ada untuk import backup lama).
-      await isar.achievements.clear();
-      await isar.quranBookmarks.clear();
-
-      for (final m in payload.collections['achievements'] ?? const []) {
-        await isar.achievements.put(_achievementFromJson(m));
-      }
-      for (final m in payload.collections['quranBookmarks'] ?? const []) {
-        await isar.quranBookmarks.put(_bookmarkFromJson(m));
-      }
-    });
-
-    // Muhasabah tags/entries/scores/streaks kini di Drift.
+    // Semua koleksi kini di Drift.
     await db.transaction(() async {
       await db.delete(db.muhasabahEntriesTable).go();
       await db.delete(db.dailyScoresTable).go();
       await db.delete(db.streaksTable).go();
       await db.delete(db.muhasabahTagsTable).go();
+      await db.delete(db.achievementsTable).go();
+      await db.delete(db.quranBookmarks).go();
+
+      for (final m in payload.collections['achievements'] ?? const []) {
+        await db.into(db.achievementsTable).insertOnConflictUpdate(
+              AchievementsTableCompanion.insert(
+                code: m['code'] as String,
+                title: m['title'] as String,
+                description: m['description'] as String,
+                targetValue: m['targetValue'] as int,
+                currentValue:
+                    Value((m['currentValue'] as int?) ?? 0),
+                unlockedAt: Value(
+                  m['unlockedAt'] == null
+                      ? null
+                      : DateTime.parse(m['unlockedAt'] as String),
+                ),
+              ),
+            );
+      }
+      for (final m in payload.collections['quranBookmarks'] ?? const []) {
+        await db.into(db.quranBookmarks).insert(
+              QuranBookmarksCompanion.insert(
+                surahNumber: m['surahNumber'] as int,
+                verseNumber: m['verseNumber'] as int,
+                surahName: m['surahName'] as String,
+                note: Value(m['note'] as String?),
+                createdAt: DateTime.parse(m['createdAt'] as String),
+                isLastRead:
+                    Value((m['isLastRead'] as bool?) ?? false),
+              ),
+            );
+      }
 
       for (final m in payload.collections['muhasabahTags'] ?? const []) {
         await db.into(db.muhasabahTagsTable).insertOnConflictUpdate(
@@ -277,41 +291,23 @@ class BackupSerializer {
         category: r.category,
       );
 
-  Map<String, dynamic> _achievementToJson(Achievement a) => {
-        'code': a.code,
-        'title': a.title,
-        'description': a.description,
-        'targetValue': a.targetValue,
-        'currentValue': a.currentValue,
-        'unlockedAt': a.unlockedAt?.toIso8601String(),
+  Map<String, dynamic> _achievementFromRowToJson(AchievementRow r) => {
+        'code': r.code,
+        'title': r.title,
+        'description': r.description,
+        'targetValue': r.targetValue,
+        'currentValue': r.currentValue,
+        'unlockedAt': r.unlockedAt?.toIso8601String(),
       };
 
-  Achievement _achievementFromJson(Map<String, dynamic> j) => Achievement()
-    ..code = j['code'] as String
-    ..title = j['title'] as String
-    ..description = j['description'] as String
-    ..targetValue = j['targetValue'] as int
-    ..currentValue = j['currentValue'] as int
-    ..unlockedAt = j['unlockedAt'] == null
-        ? null
-        : DateTime.parse(j['unlockedAt'] as String);
-
-  Map<String, dynamic> _bookmarkToJson(QuranBookmark b) => {
-        'surahNumber': b.surahNumber,
-        'verseNumber': b.verseNumber,
-        'surahName': b.surahName,
-        'note': b.note,
-        'isLastRead': b.isLastRead,
-        'createdAt': b.createdAt.toIso8601String(),
+  Map<String, dynamic> _bookmarkFromRowToJson(QuranBookmarkRow r) => {
+        'surahNumber': r.surahNumber,
+        'verseNumber': r.verseNumber,
+        'surahName': r.surahName,
+        'note': r.note,
+        'isLastRead': r.isLastRead,
+        'createdAt': r.createdAt.toIso8601String(),
       };
-
-  QuranBookmark _bookmarkFromJson(Map<String, dynamic> j) => QuranBookmark()
-    ..surahNumber = j['surahNumber'] as int
-    ..verseNumber = j['verseNumber'] as int
-    ..surahName = j['surahName'] as String
-    ..note = j['note'] as String?
-    ..isLastRead = (j['isLastRead'] as bool?) ?? false
-    ..createdAt = DateTime.parse(j['createdAt'] as String);
 
   Map<String, dynamic> _settingsToJson(UserSettings s) => {
         'displayName': s.displayName,

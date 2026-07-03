@@ -1,21 +1,13 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
 import '../../../core/extensions/date_extensions.dart';
-import '../../../models/achievement.dart';
 import '../../../services/database/app_database.dart';
-import '../../../services/isar/isar_service.dart';
 
 /// Recomputes progress for every seeded achievement from current data.
-///
-/// Cheap enough to call on every entry/sedekah write — Isar queries on the
-/// indexed `dateKey` and `tagSlug` columns return instantly for the data
-/// volumes a personal journal will ever produce.
 class AchievementEngine {
-  AchievementEngine(this._service, this._db);
-  final IsarService _service;
+  AchievementEngine(this._db);
   final AppDatabase _db;
-  Isar get _isar => _service.isar;
 
   static const _fivePrayers = {
     'sholat_subuh',
@@ -26,17 +18,15 @@ class AchievementEngine {
   };
 
   Future<void> recomputeAll() async {
-    final achievements = await _isar.achievements.where().findAll();
+    final achievements = await _db.select(_db.achievementsTable).get();
     if (achievements.isEmpty) return;
 
-    // Pre-fetch everything once; cheaper than 7 separate queries.
     final entries = await _db.select(_db.muhasabahEntriesTable).get();
     final charityCount = await _db
         .customSelect('SELECT COUNT(*) AS c FROM charity_records')
         .map((row) => row.read<int>('c'))
         .getSingle();
 
-    // Group entries by date for fast lookup.
     final entriesByDate = <String, List<String>>{};
     for (final e in entries) {
       entriesByDate.putIfAbsent(e.dateKey, () => []).add(e.tagSlug);
@@ -65,15 +55,17 @@ class AchievementEngine {
       };
       if (newValue == a.currentValue && a.unlockedAt != null) continue;
 
-      a.currentValue = newValue;
-      if (a.unlockedAt == null && newValue >= a.targetValue) {
-        a.unlockedAt = DateTime.now();
-      }
-      await _isar.writeTxn(() => _isar.achievements.put(a));
+      final unlockedAt = a.unlockedAt ??
+          (newValue >= a.targetValue ? DateTime.now() : null);
+      await (_db.update(_db.achievementsTable)
+            ..where((t) => t.id.equals(a.id)))
+          .write(AchievementsTableCompanion(
+        currentValue: Value(newValue),
+        unlockedAt: Value(unlockedAt),
+      ));
     }
   }
 
-  /// Counts consecutive days **ending today** where [predicate] holds.
   int _consecutiveDayStreak(
     Map<String, List<String>> entriesByDate,
     bool Function(List<String> slugs) predicate,
@@ -89,10 +81,6 @@ class AchievementEngine {
     return streak;
   }
 
-  /// Consecutive days where the user has **at least one** entry recorded and
-  /// none of those entries match [slug]. (Used for "no smoking" — a day with
-  /// zero entries does not count as success, to avoid free progress from
-  /// silence.)
   int _consecutiveDayStreakAbsence(
     Map<String, List<String>> entriesByDate,
     String slug,
@@ -111,8 +99,5 @@ class AchievementEngine {
 }
 
 final achievementEngineProvider = Provider<AchievementEngine>((ref) {
-  return AchievementEngine(
-    ref.watch(isarServiceProvider),
-    ref.watch(appDatabaseProvider),
-  );
+  return AchievementEngine(ref.watch(appDatabaseProvider));
 });

@@ -1,21 +1,25 @@
-import 'package:isar/isar.dart';
-
-part 'achievement.g.dart';
-
-@collection
+/// Pencapaian (achievement/badge) — plain Dart (menggantikan @collection Isar).
+///
+/// Persisted lewat tabel Drift `AchievementsTable`. Mutable biar drop-in
+/// dengan pola caller lama.
 class Achievement {
-  Id id = Isar.autoIncrement;
+  Achievement({
+    this.id = 0,
+    this.code = '',
+    this.title = '',
+    this.description = '',
+    this.targetValue = 0,
+    this.currentValue = 0,
+    this.unlockedAt,
+  });
 
-  @Index(unique: true, replace: true)
-  late String code;
-
-  late String title;
-  late String description;
-  late int targetValue;
-  late int currentValue;
+  int id;
+  String code;
+  String title;
+  String description;
+  int targetValue;
+  int currentValue;
   DateTime? unlockedAt;
-
-  Achievement();
 
   bool get isUnlocked => unlockedAt != null;
 }

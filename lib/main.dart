@@ -11,8 +11,8 @@ import 'core/constants/app_constants.dart';
 import 'core/extensions/date_extensions.dart';
 import 'features/achievements/data/achievement_engine.dart';
 import 'services/database/app_database.dart';
+import 'services/database/seed.dart';
 import 'services/dev/dummy_seeder.dart';
-import 'services/isar/isar_service.dart';
 import 'services/notification/notification_service.dart';
 import 'services/notification/prayer_confirm.dart';
 
@@ -30,13 +30,12 @@ Future<void> main() async {
   await initializeDateFormatting('id_ID');
 
   final prefs = await SharedPreferences.getInstance();
-  final isarService = await IsarService.open();
   final appDb = AppDatabase();
-  await isarService.seedDrift(appDb);
+  await seedDrift(appDb);
 
   if (kSeedDummyData) {
-    await DummySeeder(isarService, appDb).seed();
-    await AchievementEngine(isarService, appDb).recomputeAll();
+    await DummySeeder(appDb).seed();
+    await AchievementEngine(appDb).recomputeAll();
     // Demo needs Muhasabah opted-in so the home HUD/rank strip renders.
     await prefs.setBool(AppConstants.prefsMuhasabahEnabled, true);
   }
@@ -53,8 +52,6 @@ Future<void> main() async {
       slug: 'sholat_dzuhur',
       dateKey: DateTime.now().isoDate,
     );
-    // Simulate the action tap after 8s to verify the background write path
-    // (open Isar + log + recalc) and live UI update.
     Future.delayed(const Duration(seconds: 8), () {
       handlePrayerConfirmPayload('sholat_dzuhur|${DateTime.now().isoDate}');
     });
@@ -64,7 +61,6 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         sharedPrefsProvider.overrideWithValue(prefs),
-        isarServiceProvider.overrideWithValue(isarService),
         appDatabaseProvider.overrideWithValue(appDb),
         notificationServiceProvider.overrideWithValue(notif),
       ],

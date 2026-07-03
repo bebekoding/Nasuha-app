@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/extensions/date_extensions.dart';
 import '../../../models/user_settings.dart';
 import '../../../services/database/app_database.dart';
-import '../../../services/isar/isar_service.dart';
 import '../../../services/notification/notification_service.dart';
 import '../domain/entities/prayer_schedule.dart';
 import 'repositories/prayer_repository.dart';
@@ -12,13 +11,10 @@ import 'repositories/prayer_repository.dart';
 ///   adhan today:    100..199    adhan tomorrow:   200..299
 ///   confirm today:  300..399    confirm tomorrow: 400..499
 class PrayerNotificationScheduler {
-  PrayerNotificationScheduler(
-      this._prayer, this._notif, this._isarService, this._db);
+  PrayerNotificationScheduler(this._prayer, this._notif, this._db);
 
   final PrayerRepository _prayer;
   final NotificationService _notif;
-  // ignore: unused_field
-  final IsarService _isarService; // legacy — retained via constructor
   final AppDatabase _db;
 
   Future<void> scheduleNext48h() async {
@@ -133,7 +129,6 @@ final prayerNotificationSchedulerProvider =
   return PrayerNotificationScheduler(
     ref.watch(prayerRepositoryProvider),
     ref.watch(notificationServiceProvider),
-    ref.watch(isarServiceProvider),
     ref.watch(appDatabaseProvider),
   );
 });

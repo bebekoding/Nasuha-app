@@ -7,7 +7,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:drift/drift.dart' show countAll;
 
 import '../database/app_database.dart';
-import '../isar/isar_service.dart';
 import 'backup_crypto.dart';
 import 'backup_serializer.dart';
 import 'drive_backup_client.dart';
@@ -20,19 +19,14 @@ class BackupResult {
 
 class BackupService {
   BackupService({
-    required IsarService isarService,
     required AppDatabase db,
     required DriveBackupClient drive,
     BackupCrypto? crypto,
-  })  : _isar = isarService,
-        _db = db,
-        _serializer = BackupSerializer(isarService.isar, db),
+  })  : _db = db,
+        _serializer = BackupSerializer(db),
         _drive = drive,
         _crypto = crypto ?? BackupCrypto();
 
-
-  // ignore: unused_field
-  final IsarService _isar; // legacy Isar; masih dipakai serializer via constructor
   final AppDatabase _db;
   final BackupSerializer _serializer;
   final DriveBackupClient _drive;
@@ -155,7 +149,6 @@ final driveBackupClientProvider = Provider<DriveBackupClient>((ref) {
 
 final backupServiceProvider = Provider<BackupService>((ref) {
   return BackupService(
-    isarService: ref.watch(isarServiceProvider),
     db: ref.watch(appDatabaseProvider),
     drive: ref.watch(driveBackupClientProvider),
   );

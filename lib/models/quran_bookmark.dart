@@ -1,18 +1,22 @@
-import 'package:isar/isar.dart';
-
-part 'quran_bookmark.g.dart';
-
-@collection
+/// Bookmark Al-Quran (plain Dart, backup-only) — data aktif ada di tabel
+/// Drift `QuranBookmarks`. Kelas ini dipertahankan hanya untuk pola
+/// serialize backup lama.
 class QuranBookmark {
-  Id id = Isar.autoIncrement;
+  QuranBookmark({
+    this.id = 0,
+    this.surahNumber = 0,
+    this.verseNumber = 0,
+    this.surahName = '',
+    this.note,
+    DateTime? createdAt,
+    this.isLastRead = false,
+  }) : createdAt = createdAt ?? DateTime.now();
 
-  @Index()
-  late int surahNumber;
-  late int verseNumber;
-  late String surahName;
+  int id;
+  int surahNumber;
+  int verseNumber;
+  String surahName;
   String? note;
-  late DateTime createdAt;
-  late bool isLastRead;
-
-  QuranBookmark();
+  DateTime createdAt;
+  bool isLastRead;
 }

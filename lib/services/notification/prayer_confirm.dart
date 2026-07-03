@@ -148,15 +148,31 @@ Future<void> _recalcWithin(AppDatabase db, String dateKey) async {
       neg++;
     }
   }
-  await db.into(db.dailyScoresTable).insertOnConflictUpdate(
-        DailyScoresTableCompanion.insert(
-          dateKey: dateKey,
-          total: total,
-          positiveCount: pos,
-          negativeCount: neg,
-          updatedAt: DateTime.now(),
-        ),
-      );
+  // Upsert manual di dateKey (unique, bukan PK).
+  final existing = await (db.select(db.dailyScoresTable)
+        ..where((t) => t.dateKey.equals(dateKey))
+        ..limit(1))
+      .getSingleOrNull();
+  if (existing != null) {
+    await (db.update(db.dailyScoresTable)
+          ..where((t) => t.id.equals(existing.id)))
+        .write(DailyScoresTableCompanion(
+      total: Value(total),
+      positiveCount: Value(pos),
+      negativeCount: Value(neg),
+      updatedAt: Value(DateTime.now()),
+    ));
+  } else {
+    await db.into(db.dailyScoresTable).insert(
+          DailyScoresTableCompanion.insert(
+            dateKey: dateKey,
+            total: total,
+            positiveCount: pos,
+            negativeCount: neg,
+            updatedAt: DateTime.now(),
+          ),
+        );
+  }
 }
 
 Future<void> _updateStreakWithin(AppDatabase db, DateTime now) async {
@@ -173,12 +189,23 @@ Future<void> _updateStreakWithin(AppDatabase db, DateTime now) async {
   current = lastDateKey == yesterday ? current + 1 : 1;
   longest = math.max(longest, current);
 
-  await db.into(db.streaksTable).insertOnConflictUpdate(
-        StreaksTableCompanion.insert(
-          key: 'muhasabah',
-          current: current,
-          longest: longest,
-          lastDateKey: today,
-        ),
-      );
+  // Upsert manual di key (unique).
+  if (row != null) {
+    await (db.update(db.streaksTable)
+          ..where((t) => t.id.equals(row.id)))
+        .write(StreaksTableCompanion(
+      current: Value(current),
+      longest: Value(longest),
+      lastDateKey: Value(today),
+    ));
+  } else {
+    await db.into(db.streaksTable).insert(
+          StreaksTableCompanion.insert(
+            key: 'muhasabah',
+            current: current,
+            longest: longest,
+            lastDateKey: today,
+          ),
+        );
+  }
 }

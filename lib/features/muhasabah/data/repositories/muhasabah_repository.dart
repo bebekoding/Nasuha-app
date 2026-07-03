@@ -236,15 +236,33 @@ class MuhasabahRepository {
       }
     }
 
-    await _db.into(_db.dailyScoresTable).insertOnConflictUpdate(
-          DailyScoresTableCompanion.insert(
-            dateKey: dateKey,
-            total: total,
-            positiveCount: pos,
-            negativeCount: neg,
-            updatedAt: DateTime.now(),
-          ),
-        );
+    // `insertOnConflictUpdate` resolusi konflik-nya cek PK (`id`), sedangkan
+    // uniqueness kita di `dateKey`. Pakai upsert manual biar konflik di
+    // dateKey → UPDATE baris existing.
+    final existing = await (_db.select(_db.dailyScoresTable)
+          ..where((t) => t.dateKey.equals(dateKey))
+          ..limit(1))
+        .getSingleOrNull();
+    if (existing != null) {
+      await (_db.update(_db.dailyScoresTable)
+            ..where((t) => t.id.equals(existing.id)))
+          .write(DailyScoresTableCompanion(
+        total: Value(total),
+        positiveCount: Value(pos),
+        negativeCount: Value(neg),
+        updatedAt: Value(DateTime.now()),
+      ));
+    } else {
+      await _db.into(_db.dailyScoresTable).insert(
+            DailyScoresTableCompanion.insert(
+              dateKey: dateKey,
+              total: total,
+              positiveCount: pos,
+              negativeCount: neg,
+              updatedAt: DateTime.now(),
+            ),
+          );
+    }
   }
 
   // ---- Missed-prayer auto-sync ----
@@ -335,14 +353,29 @@ class MuhasabahRepository {
     }
     streak.lastDateKey = today;
 
-    await _db.into(_db.streaksTable).insertOnConflictUpdate(
-          StreaksTableCompanion.insert(
-            key: streak.key,
-            current: streak.current,
-            longest: streak.longest,
-            lastDateKey: streak.lastDateKey,
-          ),
-        );
+    // Upsert manual — `key` yang unique, bukan PK.
+    final existingStreak = await (_db.select(_db.streaksTable)
+          ..where((t) => t.key.equals(streak.key))
+          ..limit(1))
+        .getSingleOrNull();
+    if (existingStreak != null) {
+      await (_db.update(_db.streaksTable)
+            ..where((t) => t.id.equals(existingStreak.id)))
+          .write(StreaksTableCompanion(
+        current: Value(streak.current),
+        longest: Value(streak.longest),
+        lastDateKey: Value(streak.lastDateKey),
+      ));
+    } else {
+      await _db.into(_db.streaksTable).insert(
+            StreaksTableCompanion.insert(
+              key: streak.key,
+              current: streak.current,
+              longest: streak.longest,
+              lastDateKey: streak.lastDateKey,
+            ),
+          );
+    }
   }
 
   // ---- Row → domain mappers ----

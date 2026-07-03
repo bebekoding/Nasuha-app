@@ -95,7 +95,7 @@ class _MuhasabahScreenState extends ConsumerState<MuhasabahScreen> {
         data: (tags) => entriesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Gagal memuat: $e')),
-          data: (entries) => _Body(
+          data: (entries) => MuhasabahBody(
             tags: tags,
             entries: entries,
             score: scoreAsync.valueOrNull,
@@ -110,18 +110,28 @@ class _MuhasabahScreenState extends ConsumerState<MuhasabahScreen> {
 
 // ── Main body ─────────────────────────────────────────────────────────────────
 
-class _Body extends ConsumerWidget {
-  const _Body({
+class MuhasabahBody extends ConsumerWidget {
+  const MuhasabahBody({
+    super.key,
     required this.tags,
     required this.entries,
     required this.score,
     required this.streak,
+    this.hideScoreCard = false,
+    this.padding,
   });
 
   final List<MuhasabahTag> tags;
   final List<MuhasabahEntry> entries;
   final dynamic score;
   final int streak;
+
+  /// Set true kalau layout luar sudah render ScoreCard sendiri (mis. desktop
+  /// yang taruh score card di sidebar kiri).
+  final bool hideScoreCard;
+
+  /// Override padding ListView (mobile default: 16/8/16/32).
+  final EdgeInsets? padding;
 
   // Set of slugs logged today (excluding auto-entries so prayers still count)
   Set<String> get _loggedSlugs =>
@@ -171,16 +181,19 @@ class _Body extends ConsumerWidget {
     final hidden = ref.watch(muhasabahHiddenProvider);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
         // Status HUD — enlarged on the Muhasabah screen, points hidden by default.
-        ScoreCard(
-          score: score,
-          streak: streak,
-          large: true,
-          hidePoints: hidden,
-        ),
-        const SizedBox(height: 24),
+        // Kalau layout luar sudah render sendiri (desktop sidebar), skip.
+        if (!hideScoreCard) ...[
+          ScoreCard(
+            score: score,
+            streak: streak,
+            large: true,
+            hidePoints: hidden,
+          ),
+          const SizedBox(height: 24),
+        ],
 
         // ── SHOLAT 5 WAKTU ──────────────────────────────────────
         _SectionHeader(

@@ -10,6 +10,7 @@ import '../../features/dzikir/presentation/screens/dzikir_detail_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_screen.dart';
 import '../../features/home/presentation/desktop_home_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/muhasabah/presentation/screens/muhasabah_desktop_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_history_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_intro_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_screen.dart';
@@ -22,8 +23,10 @@ import '../../features/prayer_time/presentation/screens/prayer_time_screen.dart'
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/qibla/presentation/screens/qibla_screen.dart';
 import '../../features/rank/presentation/screens/rank_screen.dart';
+import '../../features/quran/presentation/screens/quran_desktop_screen.dart';
 import '../../features/quran/presentation/screens/quran_screen.dart';
 import '../../features/quran/presentation/screens/surah_detail_screen.dart';
+import '../../features/sedekah/presentation/screens/sedekah_desktop_screen.dart';
 import '../../features/sedekah/presentation/screens/sedekah_history_screen.dart';
 import '../../features/sedekah/presentation/screens/sedekah_recap_screen.dart';
 import '../../features/sedekah/presentation/screens/sedekah_screen.dart';
@@ -32,6 +35,15 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 
 /// Bungkus layar app-shell dengan [WebFrame] supaya di web desktop tidak melar.
 Widget _framed(Widget screen) => WebFrame(child: screen);
+
+/// Pilih layar berdasarkan viewport web. Di desktop lebar (>=800) render
+/// [desktop], selain itu (mobile / narrow / native) render [mobile] via
+/// WebFrame.
+Widget _desktopOr(BuildContext ctx, Widget desktop, Widget mobile) {
+  final width = MediaQuery.of(ctx).size.width;
+  if (kIsWeb && width >= 800) return desktop;
+  return _framed(mobile);
+}
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -55,8 +67,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/home', builder: (_, __) => _framed(const HomeScreen())),
       GoRoute(
-          path: '/muhasabah',
-          builder: (_, __) => _framed(const MuhasabahScreen())),
+        path: '/muhasabah',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const MuhasabahDesktopScreen(),
+          const MuhasabahScreen(),
+        ),
+      ),
       GoRoute(
           path: '/muhasabah/intro',
           builder: (_, __) => _framed(const MuhasabahIntroScreen())),
@@ -85,7 +102,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path: '/qibla', builder: (_, __) => _framed(const QiblaScreen())),
       GoRoute(path: '/rank', builder: (_, __) => _framed(const RankScreen())),
       GoRoute(
-          path: '/quran', builder: (_, __) => _framed(const QuranScreen())),
+        path: '/quran',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const QuranDesktopScreen(),
+          const QuranScreen(),
+        ),
+      ),
       GoRoute(
         path: '/quran/:num',
         builder: (ctx, state) {
@@ -95,8 +118,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-          path: '/sedekah',
-          builder: (_, __) => _framed(const SedekahScreen())),
+        path: '/sedekah',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const SedekahDesktopScreen(),
+          const SedekahScreen(),
+        ),
+      ),
       GoRoute(
           path: '/sedekah/history',
           builder: (_, __) => _framed(const SedekahHistoryScreen())),

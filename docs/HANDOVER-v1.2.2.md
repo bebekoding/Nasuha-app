@@ -1,8 +1,7 @@
-# Handover — Nasuha `v1.2.1` → `v1.1.4`
+# Handover — Nasuha `v1.2.1` → `v1.2.2`
 
-> **Target sesi berikutnya:** v1.1.4
-> **Kondisi saat ini:** `pubspec.yaml` `version: 1.2.1+3`
-> ⚠️ Ada divergensi penomoran — lihat [Versioning Note](#versioning-note) di bawah.
+> **Sesi ini:** v1.2.2 (pubspec bumped ke `1.2.2+4`)
+> **Keputusan versioning:** single-track PWA + mobile satu versi. "v1.1.4" di prompt user = maksud v1.2.2 (next patch dari v1.2.1).
 > **Live PWA:** https://nasuha-app.vercel.app
 > **Repo:** https://github.com/bebekoding/Nasuha-app (public)
 
@@ -89,7 +88,7 @@ Semua sudah di-fix & di-deploy:
 
 ---
 
-## 3. Bug **belum** teratasi (backlog v1.1.4)
+## 3. Bug **belum** teratasi (backlog v1.2.2)
 
 ### 3.1 Prioritas MEDIUM
 
@@ -168,7 +167,7 @@ Semua sudah di-fix & di-deploy:
 
 ---
 
-## 4. Peraturan/pattern penting untuk v1.1.4
+## 4. Peraturan/pattern penting untuk v1.2.2
 
 ### 4.1 Drift upsert pattern
 Jangan pakai `insertOnConflictUpdate` untuk tabel dengan UNIQUE column yang **bukan** PK.
@@ -317,23 +316,23 @@ lib/
 web/                               # PWA assets (index.html, manifest.json, favicon, icons)
 docs/
 ├── LANDING-DESIGN.md              # ⭐ Blueprint landing page (source of truth)
-└── HANDOVER-v1.1.4.md             # ⭐ Dokumen ini
+└── HANDOVER-v1.2.2.md             # ⭐ Dokumen ini
 ```
 
 ---
 
-## 7. Backlog Prioritized (untuk v1.1.4)
+## 7. Backlog Prioritized (untuk v1.2.2)
 
 Rekomendasi urutan (paling tinggi impact/blocker dulu):
 
 | # | Task | Effort | Blocker/Impact |
 |---|---|---|---|
-| 1 | **Klarifikasi versioning** (v1.1.4 vs v1.2.2) & update pubspec | 5 min | Blocker release |
+| 1 | ~~Klarifikasi versioning~~ — DONE, pubspec di `1.2.2+4` | ✓ | — |
 | 2 | **Migration script Isar → Drift** untuk user Android existing | ~1 sesi | Blocker wide release |
 | 3 | Verifikasi konten Dzikir dgn ustadz | External | Blocker rilis publik |
 | 4 | Google OAuth Web Client + `google_sign_in_web` | ~1-2 jam | Enable backup Drive di PWA |
 | 5 | Update APK nama file: `Nasuha-v1.1.3.apk` → `Nasuha-v<next>.apk` di `~/Documents/Nasuha App/` | 5 min | Cleanliness |
-| 6 | Rename `HANDOVER-v1.1.4.md` sesuai versi final | 1 min | — |
+| 6 | Rename `HANDOVER-v1.2.2.md` sesuai versi final | 1 min | — |
 | 7 | Web Notification API (adzan reminders di PWA) | ~1-2 jam | Nice-to-have |
 | 8 | Arah Kiblat di web (DeviceOrientation) atau hide | ~30 min - 2 jam | Nice-to-have |
 | 9 | Layout responsive polish untuk app screens desktop | ~1-3 sesi | Kalau desktop usage penting |
@@ -343,7 +342,7 @@ Rekomendasi urutan (paling tinggi impact/blocker dulu):
 
 ---
 
-## 8. Testing catatan (untuk v1.1.4)
+## 8. Testing catatan (untuk v1.2.2)
 
 ### Yang sudah teruji di v1.2.1
 - ✅ Mobile: catat muhasabah, sedekah, buka Quran, dzikir, jadwal sholat, kiblat, analitik, edit nama, edit foto (data URL di web)
@@ -360,18 +359,9 @@ Rekomendasi urutan (paling tinggi impact/blocker dulu):
 
 ---
 
-## <a id="versioning-note"></a>9. Versioning Note (PENTING)
+## <a id="versioning-note"></a>9. Versioning Note (RESOLVED)
 
-**Divergensi versi saat handover:**
-- `pubspec.yaml` sekarang: `version: 1.2.1+3`
-- Target sesi berikutnya (per instruksi user): `v1.1.4`
-
-Kemungkinan interpretasi:
-- (A) `v1.1.4` = typo, maksudnya `v1.2.2` (next patch dari v1.2.1) → **update `pubspec` tidak perlu**
-- (B) `v1.1.4` sengaja — mobile release track terpisah dari PWA dev cycle. Mobile stable = v1.1.x, PWA = v1.2.x → butuh **branching strategy** atau roll back pubspec ke `1.1.4+X` untuk mobile release, PWA di branch sendiri
-- (C) `v1.1.4` = release berikut Android APK yang publik-ready (misal setelah verifikasi dzikir + migration script) → pubspec dibalik ke 1.1.4, PWA jalan di branch dev
-
-**Rekomendasi:** klarifikasi di awal sesi berikutnya. Kalau A, rename dokumen ini ke `HANDOVER-v1.2.2.md`. Kalau B/C, atur branching Git.
+User memilih **interpretasi (A)**: `v1.1.4` di prompt = typo, maksudnya `v1.2.2` (next patch dari v1.2.1). **Single-track** — PWA + mobile satu versi. `pubspec.yaml` bumped `1.2.1+3` → `1.2.2+4`. Dokumen ini di-rename `HANDOVER-v1.1.4.md` → `HANDOVER-v1.2.2.md`. Tidak ada branching Git yang perlu diatur.
 
 ---
 
@@ -389,4 +379,4 @@ Kemungkinan interpretasi:
 
 ## Ringkas 1 baris
 
-> **v1.2.1 shipped**: Isar→Drift complete, PWA live, landing page done, 7 web-bugs fixed. **v1.1.4 fokus**: klarifikasi versioning, migration script mobile users, Google web OAuth, verifikasi konten agama.
+> **v1.2.1 shipped**: Isar→Drift complete, PWA live, landing page done, 7 web-bugs fixed. **v1.2.2 fokus**: klarifikasi versioning, migration script mobile users, Google web OAuth, verifikasi konten agama.

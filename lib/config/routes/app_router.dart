@@ -7,6 +7,7 @@ import '../../core/widgets/web_frame.dart';
 import '../../features/achievements/presentation/screens/achievements_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_desktop_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
+import '../../features/dzikir/presentation/screens/dzikir_desktop_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_detail_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_screen.dart';
 import '../../features/home/presentation/desktop_home_screen.dart';
@@ -15,11 +16,13 @@ import '../../features/muhasabah/presentation/screens/muhasabah_desktop_screen.d
 import '../../features/muhasabah/presentation/screens/muhasabah_history_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_intro_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_screen.dart';
+import '../../features/sholat_sunnah/presentation/screens/sholat_sunnah_desktop_screen.dart';
 import '../../features/sholat_sunnah/presentation/screens/sholat_sunnah_detail_screen.dart';
 import '../../features/sholat_sunnah/presentation/screens/sholat_sunnah_screen.dart';
 import '../../features/onboarding/presentation/lock_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
+import '../../features/prayer_time/presentation/screens/prayer_time_desktop_screen.dart';
 import '../../features/prayer_time/presentation/screens/prayer_time_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/qibla/presentation/screens/qibla_screen.dart';
@@ -83,23 +86,39 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path: '/muhasabah/history',
           builder: (_, __) => _framed(const MuhasabahHistoryScreen())),
       GoRoute(
-          path: '/dzikir', builder: (_, __) => _framed(const DzikirScreen())),
+        path: '/dzikir',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const DzikirDesktopScreen(),
+          const DzikirScreen(),
+        ),
+      ),
       GoRoute(
         path: '/dzikir/:idx',
         builder: (ctx, state) => _framed(DzikirDetailScreen(
             categoryIndex: int.parse(state.pathParameters['idx']!))),
       ),
       GoRoute(
-          path: '/sholat-sunnah',
-          builder: (_, __) => _framed(const SholatSunnahScreen())),
+        path: '/sholat-sunnah',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const SholatSunnahDesktopScreen(),
+          const SholatSunnahScreen(),
+        ),
+      ),
       GoRoute(
         path: '/sholat-sunnah/:idx',
         builder: (ctx, state) => _framed(SholatSunnahDetailScreen(
             index: int.parse(state.pathParameters['idx']!))),
       ),
       GoRoute(
-          path: '/prayer',
-          builder: (_, __) => _framed(const PrayerTimeScreen())),
+        path: '/prayer',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const PrayerTimeDesktopScreen(),
+          const PrayerTimeScreen(),
+        ),
+      ),
       GoRoute(
           path: '/qibla', builder: (_, __) => _framed(const QiblaScreen())),
       GoRoute(

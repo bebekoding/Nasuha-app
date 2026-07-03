@@ -8,8 +8,8 @@ import '../../features/achievements/presentation/screens/achievements_screen.dar
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_detail_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_screen.dart';
+import '../../features/home/presentation/desktop_home_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
-import '../../features/landing/presentation/landing_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_history_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_intro_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_screen.dart';
@@ -45,11 +45,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (ctx, __) {
-          // Gate: PC web (≥900px) → LandingScreen marketing (tanpa frame,
-          // desain sudah wide-optimized).
-          // Mobile / non-web / narrow viewport → HomeScreen dashboard (framed).
+          // Gate: web + viewport lebar → DesktopHomeScreen (wide-optimized,
+          // tanpa phone-frame). Mobile / non-web / viewport sempit →
+          // HomeScreen mobile (framed di web supaya tidak melar).
           final width = MediaQuery.of(ctx).size.width;
-          if (kIsWeb && width >= 900) return const LandingScreen();
+          if (kIsWeb && width >= 800) return const DesktopHomeScreen();
           return _framed(const HomeScreen());
         },
       ),

@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -258,7 +261,7 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _changePhoto(BuildContext context, WidgetRef ref) async {
     final current = ref.read(settingsControllerProvider).photoPath;
-    final hasPhoto = current != null && File(current).existsSync();
+    final hasPhoto = current != null && current.isNotEmpty && _photoExists(current);
 
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -283,24 +286,43 @@ class ProfileScreen extends ConsumerWidget {
     );
 
     if (action == 'pick') {
-      final res = await FilePicker.platform.pickFiles(type: FileType.image);
-      final path = res?.files.single.path;
-      if (path == null) return;
-      // Salin ke folder app dengan nama unik (timestamp) supaya cache gambar
-      // Flutter ikut ter-refresh saat foto diganti.
-      final dir = await getApplicationDocumentsDirectory();
-      final ext = path.split('.').last.toLowerCase();
-      final dest =
-          '${dir.path}/profile_${DateTime.now().millisecondsSinceEpoch}.$ext';
-      try {
-        await File(path).copy(dest);
-      } catch (_) {
-        return;
+      // Di web, `path` tak tersedia — minta bytes langsung. Simpan sebagai
+      // data URL (base64) di kolom photoPath supaya schema tetap `String`.
+      final res = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        withData: kIsWeb,
+      );
+      final picked = res?.files.single;
+      if (picked == null) return;
+
+      String? next;
+      if (kIsWeb) {
+        final Uint8List? bytes = picked.bytes;
+        if (bytes == null) return;
+        final ext = (picked.extension ?? 'png').toLowerCase();
+        final mime = _mimeFromExt(ext);
+        next = 'data:$mime;base64,${base64Encode(bytes)}';
+      } else {
+        final path = picked.path;
+        if (path == null) return;
+        // Salin ke folder app dengan nama unik (timestamp) supaya cache
+        // gambar Flutter ikut ter-refresh saat foto diganti.
+        final dir = await getApplicationDocumentsDirectory();
+        final ext = path.split('.').last.toLowerCase();
+        final dest =
+            '${dir.path}/profile_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        try {
+          await File(path).copy(dest);
+        } catch (_) {
+          return;
+        }
+        next = dest;
       }
+
       await ref
           .read(settingsControllerProvider.notifier)
-          .update((s) => s..photoPath = dest);
-      _deleteIfExists(current, keep: dest);
+          .update((s) => s..photoPath = next);
+      _deleteIfExists(current, keep: next);
     } else if (action == 'remove') {
       await ref
           .read(settingsControllerProvider.notifier)
@@ -309,12 +331,42 @@ class ProfileScreen extends ConsumerWidget {
     }
   }
 
+  /// Cek ada/tidak-nya "foto" — untuk mobile: file exist. Untuk web: data URL
+  /// non-kosong.
+  bool _photoExists(String p) {
+    if (p.startsWith('data:')) return true;
+    if (kIsWeb) return false; // path filesystem tak berguna di web
+    try {
+      return File(p).existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
   void _deleteIfExists(String? path, {String? keep}) {
     if (path == null || path == keep) return;
+    if (path.startsWith('data:')) return; // tak ada file untuk dihapus
+    if (kIsWeb) return;
     try {
       final f = File(path);
       if (f.existsSync()) f.deleteSync();
     } catch (_) {/* abaikan */}
+  }
+
+  static String _mimeFromExt(String ext) {
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/png';
+    }
   }
 }
 
@@ -327,12 +379,12 @@ class _AvatarInner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final hasPhoto = photoPath != null && File(photoPath!).existsSync();
-    if (hasPhoto) {
+    final image = _resolveImage(photoPath);
+    if (image != null) {
       return CircleAvatar(
         radius: 42,
         backgroundColor: scheme.primaryContainer,
-        backgroundImage: FileImage(File(photoPath!)),
+        backgroundImage: image,
       );
     }
     return CircleAvatar(
@@ -347,6 +399,30 @@ class _AvatarInner extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  ImageProvider? _resolveImage(String? p) {
+    if (p == null || p.isEmpty) return null;
+    // Web: photoPath disimpan sbg data URL base64.
+    if (p.startsWith('data:')) {
+      try {
+        final comma = p.indexOf(',');
+        if (comma < 0) return null;
+        final bytes = base64Decode(p.substring(comma + 1));
+        return MemoryImage(bytes);
+      } catch (_) {
+        return null;
+      }
+    }
+    // Mobile: photoPath = filesystem path.
+    if (kIsWeb) return null;
+    try {
+      final f = File(p);
+      if (!f.existsSync()) return null;
+      return FileImage(f);
+    } catch (_) {
+      return null;
+    }
   }
 }
 

@@ -55,43 +55,18 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-                width: 24, height: 1.5, color: const Color(0xFFC1923C)),
-            const SizedBox(width: 12),
-            const Text(
-              'FILOSOFI',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFC1923C),
-                letterSpacing: 0.08 * 13,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-                width: 24, height: 1.5, color: const Color(0xFFC1923C)),
-          ],
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Bukan sekadar checklist.\nTempat tumbuh yang tenang.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'Space Grotesk',
-            fontSize: 56,
-            height: 1.1,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF3B2E22),
-            letterSpacing: -0.02 * 56,
-          ),
-        ),
-      ],
+    // Tanpa eyebrow — 2-baris display heading yg cukup punya bobot sendiri.
+    return const Text(
+      'Bukan sekadar checklist.\nTempat tumbuh yang tenang.',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontFamily: 'Space Grotesk',
+        fontSize: 56,
+        height: 1.1,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF3B2E22),
+        letterSpacing: -0.02 * 56,
+      ),
     );
   }
 }
@@ -149,7 +124,7 @@ class _PillarState extends State<_Pillar> {
               fontSize: 16,
               height: 1.6,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF897866),
+              color: Color(0xFF6E5D4A), // 5.1:1 vs cream
             ),
           ),
         ],

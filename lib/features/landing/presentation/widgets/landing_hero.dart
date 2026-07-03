@@ -31,7 +31,13 @@ class _LandingHeroState extends State<LandingHero>
       duration: const Duration(milliseconds: 1200),
     );
     // Trigger entrance sedikit setelah first frame supaya splash HTML sudah hilang.
+    // Hormati prefers-reduced-motion: langsung tampil, tak ada stagger.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (MediaQuery.of(context).disableAnimations) {
+        _entrance.value = 1.0;
+        return;
+      }
       Future.delayed(const Duration(milliseconds: 80), _entrance.forward);
     });
     widget.controller.addListener(_onScroll);
@@ -72,14 +78,12 @@ class _LandingHeroState extends State<LandingHero>
           padding: const EdgeInsets.symmetric(horizontal: 48),
           child: Column(
             children: [
-              _reveal(0, _Eyebrow()),
+              _reveal(0, const _Headline()),
               const SizedBox(height: 24),
-              _reveal(1, const _Headline()),
-              const SizedBox(height: 24),
-              _reveal(2, const _Subtitle()),
+              _reveal(1, const _Subtitle()),
               const SizedBox(height: 40),
               _reveal(
-                3,
+                2,
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -97,7 +101,7 @@ class _LandingHeroState extends State<LandingHero>
               ),
               const SizedBox(height: 72),
               _reveal(
-                5,
+                4,
                 Transform.translate(
                   offset: Offset(0, -parallaxOffset),
                   child: const _Emblem(),
@@ -125,76 +129,31 @@ class _LandingHeroState extends State<LandingHero>
   }
 }
 
-class _Eyebrow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: const BoxDecoration(
-            color: Color(0xFFC1923C),
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 10),
-        const Text(
-          'MUSLIM PERSONAL GROWTH',
-          style: TextStyle(
-            fontFamily: 'Plus Jakarta Sans',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFFC1923C),
-            letterSpacing: 0.08 * 13,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _Headline extends StatelessWidget {
   const _Headline();
 
   @override
   Widget build(BuildContext context) {
+    // Emphasis via warna solid (bukan gradient). Baris kedua di warna ochre
+    // untuk kontras yang membedakan dari ink; weight & size tetap sama.
     return Text.rich(
-      TextSpan(
-        style: const TextStyle(
+      const TextSpan(
+        style: TextStyle(
           fontFamily: 'Space Grotesk',
           fontSize: 72,
           height: 1.05,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF3B2E22),
           letterSpacing: -0.02 * 72,
         ),
         children: [
-          const TextSpan(text: 'Setiap hari adalah\n'),
-          WidgetSpan(
-            alignment: PlaceholderAlignment.baseline,
-            baseline: TextBaseline.alphabetic,
-            child: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFC1923C), Color(0xFF8A5A3A)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ).createShader(bounds),
-              child: const Text(
-                'satu langkah kecil',
-                style: TextStyle(
-                  fontFamily: 'Space Grotesk',
-                  fontSize: 72,
-                  height: 1.05,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white, // masked
-                  letterSpacing: -0.02 * 72,
-                ),
-              ),
-            ),
+          TextSpan(
+            text: 'Setiap hari adalah\n',
+            style: TextStyle(color: Color(0xFF3B2E22)),
           ),
-          const TextSpan(text: '.'),
+          TextSpan(
+            text: 'satu langkah kecil.',
+            style: TextStyle(color: Color(0xFF8A5A3A)),
+          ),
         ],
       ),
       textAlign: TextAlign.center,
@@ -214,10 +173,10 @@ class _Subtitle extends StatelessWidget {
         'Semua di satu tempat, tetap privat di HP-mu.',
         style: TextStyle(
           fontFamily: 'Plus Jakarta Sans',
-          fontSize: 18,
+          fontSize: 20, // bumped 18→20 supaya rasio scale (20/16=1.25) tak flat
           height: 1.55,
           fontWeight: FontWeight.w400,
-          color: Color(0xFF897866),
+          color: Color(0xFF6E5D4A), // darker taupe: 5.1:1 kontras vs cream (was 3.6)
         ),
         textAlign: TextAlign.center,
       ),

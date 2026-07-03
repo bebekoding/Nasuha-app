@@ -16,7 +16,7 @@ class LandingCta extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFF8A5A3A),
-      padding: const EdgeInsets.symmetric(vertical: 100),
+      padding: const EdgeInsets.symmetric(vertical: 96), // snap ke 8-scale
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
@@ -45,11 +45,11 @@ class LandingCta extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 18,
+                      fontSize: 20, // 20/16 = 1.25 ✓ konsisten dgn hero
                       height: 1.55,
                       fontWeight: FontWeight.w400,
                       color:
-                          const Color(0xFFFCF7EE).withValues(alpha: 0.85),
+                          const Color(0xFFFCF7EE).withValues(alpha: 0.90),
                     ),
                   ),
                   const SizedBox(height: 40),

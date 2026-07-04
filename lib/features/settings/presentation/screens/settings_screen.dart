@@ -30,14 +30,30 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Pengaturan')),
+      body: const SettingsBody(),
+    );
+  }
+}
+
+class SettingsBody extends ConsumerWidget {
+  const SettingsBody({super.key, this.shrinkWrap = false});
+
+  final bool shrinkWrap;
+
+  static const _calcMethods = SettingsScreen._calcMethods;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
     final themeMode = ref.watch(themeControllerProvider);
     final settingsCtrl = ref.read(settingsControllerProvider.notifier);
     final themeCtrl = ref.read(themeControllerProvider.notifier);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan')),
-      body: ListView(
+    return ListView(
+        shrinkWrap: shrinkWrap,
+        physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
         children: [
           const _SectionTitle('Tampilan'),
           ListTile(
@@ -207,8 +223,7 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
         ],
-      ),
-    );
+      );
   }
 }
 

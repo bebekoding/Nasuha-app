@@ -8,7 +8,11 @@ import '../../../../services/backup/drive_backup_client.dart';
 import '../providers/backup_providers.dart';
 
 class BackupScreen extends ConsumerStatefulWidget {
-  const BackupScreen({super.key});
+  const BackupScreen({super.key, this.chromeless = false});
+
+  /// Kalau true, jangan render Scaffold+AppBar sendiri — assume dipakai di
+  /// dalam parent shell (DesktopPageShell). Konten body tetap sama.
+  final bool chromeless;
 
   @override
   ConsumerState<BackupScreen> createState() => _BackupScreenState();
@@ -84,12 +88,16 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final ctrl = ref.read(backupControllerProvider.notifier);
     final lastBackupAt = ctrl.lastBackupAt;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Akun & Pemulihan')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _privacyCard(context),
+    final body = ListView(
+      shrinkWrap: widget.chromeless,
+      physics: widget.chromeless
+          ? const NeverScrollableScrollPhysics()
+          : null,
+      padding: widget.chromeless
+          ? EdgeInsets.zero
+          : const EdgeInsets.all(16),
+      children: [
+        _privacyCard(context),
           const SizedBox(height: 16),
 
           // ── New-device restore banner ─────────────────────────
@@ -197,13 +205,18 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             const SizedBox(height: 16),
             _statusCard(context),
           ],
-          if (_busy) ...[
-            const SizedBox(height: 12),
-            const Center(child: CircularProgressIndicator()),
-          ],
-          const SizedBox(height: 24),
+        if (_busy) ...[
+          const SizedBox(height: 12),
+          const Center(child: CircularProgressIndicator()),
         ],
-      ),
+        const SizedBox(height: 24),
+      ],
+    );
+
+    if (widget.chromeless) return body;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Akun & Pemulihan')),
+      body: body,
     );
   }
 

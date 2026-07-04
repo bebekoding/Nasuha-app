@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/web_frame.dart';
+import '../../features/achievements/presentation/screens/achievements_desktop_screen.dart';
 import '../../features/achievements/presentation/screens/achievements_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_desktop_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
@@ -24,6 +25,7 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/prayer_time/presentation/screens/prayer_time_desktop_screen.dart';
 import '../../features/prayer_time/presentation/screens/prayer_time_screen.dart';
+import '../../features/profile/presentation/profile_desktop_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/qibla/presentation/screens/qibla_screen.dart';
 import '../../features/rank/presentation/screens/rank_desktop_screen.dart';
@@ -35,7 +37,9 @@ import '../../features/sedekah/presentation/screens/sedekah_desktop_screen.dart'
 import '../../features/sedekah/presentation/screens/sedekah_history_screen.dart';
 import '../../features/sedekah/presentation/screens/sedekah_recap_screen.dart';
 import '../../features/sedekah/presentation/screens/sedekah_screen.dart';
+import '../../features/settings/presentation/screens/backup_desktop_screen.dart';
 import '../../features/settings/presentation/screens/backup_screen.dart';
+import '../../features/settings/presentation/screens/settings_desktop_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 
 /// Bungkus layar app-shell dengan [WebFrame] supaya di web desktop tidak melar.
@@ -168,16 +172,37 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-          path: '/achievements',
-          builder: (_, __) => _framed(const AchievementsScreen())),
+        path: '/achievements',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const AchievementsDesktopScreen(),
+          const AchievementsScreen(),
+        ),
+      ),
       GoRoute(
-          path: '/profile',
-          builder: (_, __) => _framed(const ProfileScreen())),
+        path: '/profile',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const ProfileDesktopScreen(),
+          const ProfileScreen(),
+        ),
+      ),
       GoRoute(
-          path: '/settings',
-          builder: (_, __) => _framed(const SettingsScreen())),
+        path: '/settings',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const SettingsDesktopScreen(),
+          const SettingsScreen(),
+        ),
+      ),
       GoRoute(
-          path: '/backup', builder: (_, __) => _framed(const BackupScreen())),
+        path: '/backup',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const BackupDesktopScreen(),
+          const BackupScreen(),
+        ),
+      ),
     ],
   );
 });

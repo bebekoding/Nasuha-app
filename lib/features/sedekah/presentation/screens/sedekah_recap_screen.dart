@@ -14,7 +14,11 @@ enum _Period { harian, mingguan, bulanan }
 const _green = Color(0xFFA77B43);
 
 class SedekahRecapScreen extends ConsumerStatefulWidget {
-  const SedekahRecapScreen({super.key});
+  const SedekahRecapScreen({super.key, this.chromeless = false});
+
+  /// Kalau true, jangan render Scaffold+AppBar sendiri — assume dipakai di
+  /// dalam parent shell (DesktopPageShell).
+  final bool chromeless;
 
   @override
   ConsumerState<SedekahRecapScreen> createState() => _SedekahRecapScreenState();
@@ -36,6 +40,12 @@ class _SedekahRecapScreenState extends ConsumerState<SedekahRecapScreen> {
     final allAsync = ref.watch(sedekahAllProvider);
     final hidden = ref.watch(sedekahHiddenProvider);
 
+    final body = allAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (all) => _content(all, hidden),
+    );
+    if (widget.chromeless) return body;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rekap & Grafik'),
@@ -47,11 +57,7 @@ class _SedekahRecapScreenState extends ConsumerState<SedekahRecapScreen> {
           ),
         ],
       ),
-      body: allAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (all) => _content(all, hidden),
-      ),
+      body: body,
     );
   }
 

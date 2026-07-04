@@ -11,14 +11,14 @@ final _allEntriesProvider = StreamProvider<List<MuhasabahEntry>>((ref) {
 });
 
 class MuhasabahHistoryScreen extends ConsumerWidget {
-  const MuhasabahHistoryScreen({super.key});
+  const MuhasabahHistoryScreen({super.key, this.chromeless = false});
+
+  final bool chromeless;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entriesAsync = ref.watch(_allEntriesProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Muhasabah')),
-      body: entriesAsync.when(
+    final body = entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (entries) {
@@ -32,7 +32,13 @@ class MuhasabahHistoryScreen extends ConsumerWidget {
           }
           final dateKeys = grouped.keys.toList();
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            shrinkWrap: chromeless,
+            physics: chromeless
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            padding: chromeless
+                ? EdgeInsets.zero
+                : const EdgeInsets.all(16),
             itemCount: dateKeys.length,
             itemBuilder: (ctx, i) {
               final key = dateKeys[i];
@@ -76,7 +82,11 @@ class MuhasabahHistoryScreen extends ConsumerWidget {
             },
           );
         },
-      ),
+      );
+    if (chromeless) return body;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Riwayat Muhasabah')),
+      body: body,
     );
   }
 }

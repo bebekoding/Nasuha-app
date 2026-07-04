@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/desktop_page_shell.dart';
 import '../../core/widgets/web_frame.dart';
 import '../../features/achievements/presentation/screens/achievements_desktop_screen.dart';
 import '../../features/achievements/presentation/screens/achievements_screen.dart';
@@ -27,6 +28,7 @@ import '../../features/prayer_time/presentation/screens/prayer_time_desktop_scre
 import '../../features/prayer_time/presentation/screens/prayer_time_screen.dart';
 import '../../features/profile/presentation/profile_desktop_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/qibla/presentation/screens/qibla_desktop_screen.dart';
 import '../../features/qibla/presentation/screens/qibla_screen.dart';
 import '../../features/rank/presentation/screens/rank_desktop_screen.dart';
 import '../../features/rank/presentation/screens/rank_screen.dart';
@@ -52,6 +54,46 @@ Widget _desktopOr(BuildContext ctx, Widget desktop, Widget mobile) {
   final width = MediaQuery.of(ctx).size.width;
   if (kIsWeb && width >= 800) return desktop;
   return _framed(mobile);
+}
+
+/// Untuk sub-detail screens list-based yang tak butuh custom desktop
+/// layout — cukup wrap dengan chrome DesktopPageShell + centered max-width.
+/// Mobile route pakai [chromeless]=false, desktop pakai [chromeless]=true.
+Widget _desktopWrapOr(
+  BuildContext ctx, {
+  required Widget Function(bool chromeless) build,
+  required String eyebrow,
+  String? currentRoute,
+  double maxWidth = 780,
+}) {
+  final width = MediaQuery.of(ctx).size.width;
+  if (kIsWeb && width >= 800) {
+    return DesktopPageShell(
+      currentRoute: currentRoute,
+      eyebrow: eyebrow,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(ctx).colorScheme.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                  color: Theme.of(ctx)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.16),
+                  width: 1.2),
+            ),
+            clipBehavior: Clip.hardEdge,
+            padding: const EdgeInsets.all(20),
+            child: build(true),
+          ),
+        ),
+      ),
+    );
+  }
+  return _framed(build(false));
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -87,8 +129,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path: '/muhasabah/intro',
           builder: (_, __) => _framed(const MuhasabahIntroScreen())),
       GoRoute(
-          path: '/muhasabah/history',
-          builder: (_, __) => _framed(const MuhasabahHistoryScreen())),
+        path: '/muhasabah/history',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => MuhasabahHistoryScreen(chromeless: c),
+          eyebrow: 'RIWAYAT MUHASABAH',
+        ),
+      ),
       GoRoute(
         path: '/dzikir',
         builder: (ctx, __) => _desktopOr(
@@ -124,7 +171,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-          path: '/qibla', builder: (_, __) => _framed(const QiblaScreen())),
+        path: '/qibla',
+        builder: (ctx, __) => _desktopOr(
+          ctx,
+          const QiblaDesktopScreen(),
+          const QiblaScreen(),
+        ),
+      ),
       GoRoute(
         path: '/rank',
         builder: (ctx, __) => _desktopOr(
@@ -158,11 +211,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-          path: '/sedekah/history',
-          builder: (_, __) => _framed(const SedekahHistoryScreen())),
+        path: '/sedekah/history',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => SedekahHistoryScreen(chromeless: c),
+          eyebrow: 'RIWAYAT SEDEKAH',
+        ),
+      ),
       GoRoute(
-          path: '/sedekah/recap',
-          builder: (_, __) => _framed(const SedekahRecapScreen())),
+        path: '/sedekah/recap',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => SedekahRecapScreen(chromeless: c),
+          eyebrow: 'REKAP SEDEKAH',
+          maxWidth: 960,
+        ),
+      ),
       GoRoute(
         path: '/analytics',
         builder: (ctx, __) => _desktopOr(

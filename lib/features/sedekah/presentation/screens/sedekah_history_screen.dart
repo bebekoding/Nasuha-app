@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 import '../../data/repositories/sedekah_repository.dart';
 
 class SedekahHistoryScreen extends ConsumerWidget {
-  const SedekahHistoryScreen({super.key});
+  const SedekahHistoryScreen({super.key, this.chromeless = false});
+
+  final bool chromeless;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -13,9 +15,7 @@ class SedekahHistoryScreen extends ConsumerWidget {
     final currency = NumberFormat.currency(
         locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Sedekah')),
-      body: asyncAll.when(
+    final body = asyncAll.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (list) {
@@ -23,7 +23,13 @@ class SedekahHistoryScreen extends ConsumerWidget {
             return const Center(child: Text('Belum ada riwayat sedekah'));
           }
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            shrinkWrap: chromeless,
+            physics: chromeless
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            padding: chromeless
+                ? EdgeInsets.zero
+                : const EdgeInsets.all(16),
             itemCount: list.length,
             itemBuilder: (ctx, i) {
               final r = list[i];
@@ -43,7 +49,11 @@ class SedekahHistoryScreen extends ConsumerWidget {
             },
           );
         },
-      ),
+      );
+    if (chromeless) return body;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Riwayat Sedekah')),
+      body: body,
     );
   }
 }

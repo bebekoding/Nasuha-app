@@ -47,7 +47,9 @@ const _steps = [
 ];
 
 class MuhasabahIntroScreen extends ConsumerWidget {
-  const MuhasabahIntroScreen({super.key});
+  const MuhasabahIntroScreen({super.key, this.chromeless = false});
+
+  final bool chromeless;
 
   void _back(BuildContext context) =>
       context.canPop() ? context.pop() : context.go('/');
@@ -62,17 +64,15 @@ class MuhasabahIntroScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => _back(context),
-        ),
-        title: const Text('Muhasabah'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-        children: [
+    final body = ListView(
+      shrinkWrap: chromeless,
+      physics: chromeless
+          ? const NeverScrollableScrollPhysics()
+          : null,
+      padding: chromeless
+          ? EdgeInsets.zero
+          : const EdgeInsets.fromLTRB(24, 8, 24, 16),
+      children: [
           // Hero
           Center(
             child: Column(
@@ -114,34 +114,37 @@ class MuhasabahIntroScreen extends ConsumerWidget {
             _StepCard(step: _steps[i], number: i + 1),
             const SizedBox(height: 12),
           ],
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => _activate(context, ref),
+              style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16)),
+              child: const Text('Aktifkan Muhasabah',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton(
+              onPressed: () => _back(context),
+              child: const Text('Nanti saja'),
+            ),
+          ),
           const SizedBox(height: 8),
         ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => _activate(context, ref),
-                  style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16)),
-                  child: const Text('Aktifkan Muhasabah',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              TextButton(
-                onPressed: () => _back(context),
-                child: const Text('Nanti saja'),
-              ),
-            ],
-          ),
+      );
+    if (chromeless) return body;
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => _back(context),
         ),
+        title: const Text('Muhasabah'),
       ),
+      body: body,
     );
   }
 }

@@ -22,10 +22,16 @@ class SurahDetailScreen extends ConsumerStatefulWidget {
     super.key,
     required this.surahNumber,
     this.initialAyah,
+    this.chromeless = false,
   });
 
   final int surahNumber;
   final int? initialAyah;
+
+  /// Kalau true, jangan render Scaffold+AppBar sendiri di Terjemah mode —
+  /// assume dipakai di dalam DesktopPageShell. Fokus mode selalu render
+  /// themed Scaffold sendiri (immersive reading).
+  final bool chromeless;
 
   @override
   ConsumerState<SurahDetailScreen> createState() => _SurahDetailScreenState();
@@ -239,6 +245,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             : _buildReader(focusMode, lastRead);
 
     if (focusMode) {
+      // Fokus mode selalu immersive fullscreen (bypass DesktopPageShell).
       return Theme(
         data: _focusTheme(context),
         child: Scaffold(
@@ -252,6 +259,33 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
           ),
           body: body,
         ),
+      );
+    }
+
+    if (widget.chromeless) {
+      // Terjemah mode chromeless: toggle button in-flow di header row supaya
+      // tetap accessible di dalam DesktopPageShell.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Space Grotesk',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              toggle,
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(child: body),
+        ],
       );
     }
 

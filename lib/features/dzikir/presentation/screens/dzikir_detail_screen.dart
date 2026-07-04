@@ -6,8 +6,13 @@ import '../../../muhasabah/presentation/providers/muhasabah_autolog.dart';
 import '../../data/dzikir_data.dart';
 
 class DzikirDetailScreen extends ConsumerStatefulWidget {
-  const DzikirDetailScreen({super.key, required this.categoryIndex});
+  const DzikirDetailScreen({
+    super.key,
+    required this.categoryIndex,
+    this.chromeless = false,
+  });
   final int categoryIndex;
+  final bool chromeless;
 
   @override
   ConsumerState<DzikirDetailScreen> createState() =>
@@ -32,19 +37,28 @@ class _DzikirDetailScreenState extends ConsumerState<DzikirDetailScreen> {
   Widget build(BuildContext context) {
     if (widget.categoryIndex < 0 ||
         widget.categoryIndex >= kDzikirCategories.length) {
-      return const Scaffold(
-          body: Center(child: Text('Kategori tidak ditemukan')));
+      const notFound = Center(child: Text('Kategori tidak ditemukan'));
+      if (widget.chromeless) return notFound;
+      return const Scaffold(body: notFound);
     }
     final category = kDzikirCategories[widget.categoryIndex];
+    final body = ListView.separated(
+      shrinkWrap: widget.chromeless,
+      physics: widget.chromeless
+          ? const NeverScrollableScrollPhysics()
+          : null,
+      padding: widget.chromeless
+          ? EdgeInsets.zero
+          : const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      itemCount: category.items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 14),
+      itemBuilder: (ctx, i) =>
+          _DzikirCard(item: category.items[i], index: i + 1),
+    );
+    if (widget.chromeless) return body;
     return Scaffold(
       appBar: AppBar(title: Text(category.title)),
-      body: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        itemCount: category.items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 14),
-        itemBuilder: (ctx, i) =>
-            _DzikirCard(item: category.items[i], index: i + 1),
-      ),
+      body: body,
     );
   }
 }

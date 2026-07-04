@@ -65,32 +65,37 @@ Widget _desktopWrapOr(
   required String eyebrow,
   String? currentRoute,
   double maxWidth = 780,
+  bool bodyIsScrollable = false,
 }) {
   final width = MediaQuery.of(ctx).size.width;
   if (kIsWeb && width >= 800) {
+    final wrapped = Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+                color: Theme.of(ctx)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.16),
+                width: 1.2),
+          ),
+          clipBehavior: Clip.hardEdge,
+          padding: bodyIsScrollable
+              ? const EdgeInsets.symmetric(horizontal: 20, vertical: 12)
+              : const EdgeInsets.all(20),
+          child: build(true),
+        ),
+      ),
+    );
     return DesktopPageShell(
       currentRoute: currentRoute,
       eyebrow: eyebrow,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(ctx).colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                  color: Theme.of(ctx)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.16),
-                  width: 1.2),
-            ),
-            clipBehavior: Clip.hardEdge,
-            padding: const EdgeInsets.all(20),
-            child: build(true),
-          ),
-        ),
-      ),
+      bodyIsScrollable: bodyIsScrollable,
+      child: wrapped,
     );
   }
   return _framed(build(false));
@@ -126,8 +131,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-          path: '/muhasabah/intro',
-          builder: (_, __) => _framed(const MuhasabahIntroScreen())),
+        path: '/muhasabah/intro',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => MuhasabahIntroScreen(chromeless: c),
+          eyebrow: 'MULAI MUHASABAH',
+          maxWidth: 640,
+        ),
+      ),
       GoRoute(
         path: '/muhasabah/history',
         builder: (ctx, __) => _desktopWrapOr(
@@ -146,8 +157,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/dzikir/:idx',
-        builder: (ctx, state) => _framed(DzikirDetailScreen(
-            categoryIndex: int.parse(state.pathParameters['idx']!))),
+        builder: (ctx, state) {
+          final idx = int.parse(state.pathParameters['idx']!);
+          return _desktopWrapOr(
+            ctx,
+            build: (c) =>
+                DzikirDetailScreen(categoryIndex: idx, chromeless: c),
+            eyebrow: 'DZIKIR',
+            maxWidth: 780,
+          );
+        },
       ),
       GoRoute(
         path: '/sholat-sunnah',
@@ -159,8 +178,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/sholat-sunnah/:idx',
-        builder: (ctx, state) => _framed(SholatSunnahDetailScreen(
-            index: int.parse(state.pathParameters['idx']!))),
+        builder: (ctx, state) {
+          final idx = int.parse(state.pathParameters['idx']!);
+          return _desktopWrapOr(
+            ctx,
+            build: (c) =>
+                SholatSunnahDetailScreen(index: idx, chromeless: c),
+            eyebrow: 'SHOLAT SUNNAH',
+            maxWidth: 780,
+          );
+        },
       ),
       GoRoute(
         path: '/prayer',
@@ -199,7 +226,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (ctx, state) {
           final n = int.parse(state.pathParameters['num']!);
           final ayah = int.tryParse(state.uri.queryParameters['ayah'] ?? '');
-          return _framed(SurahDetailScreen(surahNumber: n, initialAyah: ayah));
+          return _desktopWrapOr(
+            ctx,
+            build: (c) => SurahDetailScreen(
+              surahNumber: n,
+              initialAyah: ayah,
+              chromeless: c,
+            ),
+            eyebrow: 'AL-QURAN',
+            currentRoute: '/quran',
+            maxWidth: 860,
+            bodyIsScrollable: true,
+          );
         },
       ),
       GoRoute(

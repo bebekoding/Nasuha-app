@@ -20,6 +20,7 @@ class DesktopPageShell extends StatelessWidget {
     this.showBack = true,
     this.eyebrow,
     this.currentRoute,
+    this.bodyIsScrollable = false,
   });
 
   final Widget child;
@@ -32,6 +33,12 @@ class DesktopPageShell extends StatelessWidget {
   /// Route saat ini untuk highlight nav link (misal '/analytics').
   final String? currentRoute;
 
+  /// Kalau true, jangan bungkus dengan SingleChildScrollView — child
+  /// bertanggung jawab scroll sendiri (CustomScrollView untuk reader).
+  /// Chrome (nav + eyebrow) tetap fixed di atas, child mendapat sisa
+  /// tinggi viewport via Expanded.
+  final bool bodyIsScrollable;
+
   static const double maxContentWidth = 1240;
   static const double horizontalPadding = 48;
 
@@ -39,6 +46,44 @@ class DesktopPageShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.dBg : AppColors.lBg;
+
+    final chrome = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: maxContentWidth),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: horizontalPadding),
+          child: bodyIsScrollable
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DesktopTopNav(currentRoute: currentRoute),
+                    const SizedBox(height: 24),
+                    if (showBack || eyebrow != null)
+                      _PageHeaderRow(
+                          eyebrow: eyebrow, showBack: showBack),
+                    if (showBack || eyebrow != null)
+                      const SizedBox(height: 16),
+                    Expanded(child: child),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DesktopTopNav(currentRoute: currentRoute),
+                    const SizedBox(height: 32),
+                    if (showBack || eyebrow != null)
+                      _PageHeaderRow(
+                          eyebrow: eyebrow, showBack: showBack),
+                    if (showBack || eyebrow != null)
+                      const SizedBox(height: 16),
+                    child,
+                    const SizedBox(height: 60),
+                  ],
+                ),
+        ),
+      ),
+    );
 
     return Scaffold(
       backgroundColor: bg,
@@ -48,32 +93,9 @@ class DesktopPageShell extends StatelessWidget {
             const Positioned.fill(
               child: IgnorePointer(child: DesktopSunburstBackdrop()),
             ),
-          SingleChildScrollView(
-            child: Center(
-              child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(maxWidth: maxContentWidth),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: horizontalPadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DesktopTopNav(currentRoute: currentRoute),
-                      const SizedBox(height: 32),
-                      if (showBack || eyebrow != null)
-                        _PageHeaderRow(
-                            eyebrow: eyebrow, showBack: showBack),
-                      if (showBack || eyebrow != null)
-                        const SizedBox(height: 16),
-                      child,
-                      const SizedBox(height: 60),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          bodyIsScrollable
+              ? chrome
+              : SingleChildScrollView(child: chrome),
         ],
       ),
     );

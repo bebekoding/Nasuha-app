@@ -4,25 +4,35 @@ import '../../../../config/theme/app_fonts.dart';
 import '../../data/sholat_sunnah_data.dart';
 
 class SholatSunnahDetailScreen extends StatelessWidget {
-  const SholatSunnahDetailScreen({super.key, required this.index});
+  const SholatSunnahDetailScreen({
+    super.key,
+    required this.index,
+    this.chromeless = false,
+  });
   final int index;
+  final bool chromeless;
 
   static const _color = Color(0xFFA77B43);
 
   @override
   Widget build(BuildContext context) {
     if (index < 0 || index >= kSholatSunnah.length) {
-      return const Scaffold(
-          body: Center(child: Text('Tidak ditemukan')));
+      const notFound = Center(child: Text('Tidak ditemukan'));
+      if (chromeless) return notFound;
+      return const Scaffold(body: notFound);
     }
     final item = kSholatSunnah[index];
     final scheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(item.title)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
+    final body = ListView(
+      shrinkWrap: chromeless,
+      physics: chromeless
+          ? const NeverScrollableScrollPhysics()
+          : null,
+      padding: chromeless
+          ? EdgeInsets.zero
+          : const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      children: [
           // Info chips
           _InfoRow(icon: Icons.repeat, label: 'Jumlah', value: item.rakaat),
           _InfoRow(icon: Icons.schedule, label: 'Waktu', value: item.waktu),
@@ -138,7 +148,11 @@ class SholatSunnahDetailScreen extends StatelessWidget {
             ),
           ],
         ],
-      ),
+      );
+    if (chromeless) return body;
+    return Scaffold(
+      appBar: AppBar(title: Text(item.title)),
+      body: body,
     );
   }
 

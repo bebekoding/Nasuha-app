@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -102,10 +103,19 @@ class _DesktopHomeScreenState extends ConsumerState<DesktopHomeScreen>
                           onRankTap: () => context.push('/rank'),
                         ),
                       ),
-                      const SizedBox(height: 64),
+                      const SizedBox(height: 20),
                       _Reveal(
                         controller: _entrance,
                         order: 2,
+                        child: _JadwalNextHero(
+                          prayerAsync: prayerAsync,
+                          onTap: () => context.push('/prayer'),
+                        ),
+                      ),
+                      const SizedBox(height: 64),
+                      _Reveal(
+                        controller: _entrance,
+                        order: 3,
                         child: _SectionHeader(
                           title: 'Prioritas hari ini',
                           subtitle:
@@ -121,7 +131,7 @@ class _DesktopHomeScreenState extends ConsumerState<DesktopHomeScreen>
                       const SizedBox(height: 64),
                       _Reveal(
                         controller: _entrance,
-                        order: 3,
+                        order: 4,
                         child: _SectionHeader(
                           title: 'Fitur lainnya',
                           subtitle:
@@ -179,7 +189,11 @@ class _TopNav extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 40),
-          _NavLink(label: 'Beranda', onTap: () {}),
+          _NavLink(label: 'Beranda', active: true, onTap: () {}),
+          _NavLink(
+              label: 'Al-Quran', onTap: () => context.push('/quran')),
+          _NavLink(
+              label: 'Jadwal Sholat', onTap: () => context.push('/prayer')),
           _NavLink(
               label: 'Analitik', onTap: () => context.push('/analytics')),
           _NavLink(label: 'Rank', onTap: () => context.push('/rank')),
@@ -199,9 +213,14 @@ class _TopNav extends StatelessWidget {
 }
 
 class _NavLink extends StatefulWidget {
-  const _NavLink({required this.label, required this.onTap});
+  const _NavLink({
+    required this.label,
+    required this.onTap,
+    this.active = false,
+  });
   final String label;
   final VoidCallback onTap;
+  final bool active;
 
   @override
   State<_NavLink> createState() => _NavLinkState();
@@ -213,6 +232,9 @@ class _NavLinkState extends State<_NavLink> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final color = widget.active
+        ? scheme.primary
+        : (_hover ? scheme.primary : scheme.onSurface);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -220,17 +242,34 @@ class _NavLinkState extends State<_NavLink> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            style: TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: _hover ? scheme.primary : scheme.onSurface,
-            ),
-            child: Text(widget.label),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 15,
+                  fontWeight:
+                      widget.active ? FontWeight.w700 : FontWeight.w500,
+                  color: color,
+                ),
+                child: Text(widget.label),
+              ),
+              const SizedBox(height: 4),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                height: 2,
+                width: widget.active ? 20 : 0,
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -639,6 +678,394 @@ class _HudRankTileState extends State<_HudRankTile> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JADWAL NEXT HERO — live next-prayer card di bawah HUD strip
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _JadwalNextHero extends StatefulWidget {
+  const _JadwalNextHero({required this.prayerAsync, required this.onTap});
+  final AsyncValue<PrayerSchedule?> prayerAsync;
+  final VoidCallback onTap;
+
+  @override
+  State<_JadwalNextHero> createState() => _JadwalNextHeroState();
+}
+
+class _JadwalNextHeroState extends State<_JadwalNextHero> {
+  Timer? _ticker;
+  bool _hover = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild tiap 30 detik supaya countdown akurat.
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final line = isDark ? AppColors.dLine : AppColors.lLine;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    const accent = AppColors.terracotta;
+
+    return widget.prayerAsync.when(
+      loading: () => _shell(scheme, line, const _JadwalSkeleton()),
+      error: (_, __) => _shell(
+        scheme,
+        line,
+        _JadwalPrompt(
+          message: 'Belum bisa hitung — cek koneksi/lokasi.',
+          cta: 'Coba lagi',
+          onTap: widget.onTap,
+        ),
+      ),
+      data: (schedule) {
+        if (schedule == null) {
+          return _shell(
+            scheme,
+            line,
+            _JadwalPrompt(
+              message:
+                  'Aktifkan izin lokasi supaya Nasuha bisa hitung adzan.',
+              cta: 'Atur lokasi',
+              onTap: widget.onTap,
+            ),
+          );
+        }
+        final next = schedule.next;
+        final now = DateTime.now();
+        final diff = next.time.difference(now);
+        final h = diff.inHours;
+        final m = diff.inMinutes % 60;
+        final hhmm = DateFormat.Hm().format(next.time);
+        final countdown = diff.isNegative
+            ? '—'
+            : (h > 0
+                ? '${h}j ${m.toString().padLeft(2, '0')}m'
+                : '${diff.inMinutes}m');
+
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              transform: (_hover && !reduceMotion)
+                  ? (Matrix4.identity()
+                    ..translateByDouble(0.0, -3.0, 0.0, 1.0))
+                  : Matrix4.identity(),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 28, vertical: 22),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    scheme.surface,
+                    accent.withValues(alpha: 0.10),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: accent.withValues(alpha: _hover ? 0.4 : 0.24),
+                    width: 1.4),
+                boxShadow: _hover
+                    ? [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.20),
+                          blurRadius: 22,
+                          offset: const Offset(0, 12),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: scheme.onSurface.withValues(alpha: 0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.mosque,
+                        color: accent, size: 28),
+                  ),
+                  const SizedBox(width: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'ADZAN BERIKUTNYA',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.8,
+                          color: accent,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            next.name,
+                            style: TextStyle(
+                              fontFamily: 'Space Grotesk',
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              height: 1.0,
+                              color: scheme.onSurface,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'pukul $hhmm',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurface
+                                  .withValues(alpha: 0.72),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        countdown,
+                        style: TextStyle(
+                          fontFamily: 'Space Grotesk',
+                          fontSize: 34,
+                          fontWeight: FontWeight.w800,
+                          height: 1.0,
+                          color: accent,
+                          letterSpacing: -0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'lagi',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.2,
+                          color:
+                              scheme.onSurface.withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 20),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    transform: Matrix4.translationValues(
+                        _hover && !reduceMotion ? 4 : 0, 0, 0),
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: 18,
+                      color: accent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _shell(ColorScheme scheme, Color line, Widget child) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: line, width: 1),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _JadwalSkeleton extends StatelessWidget {
+  const _JadwalSkeleton();
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: scheme.onSurface.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        const SizedBox(width: 20),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 120,
+              height: 12,
+              color: scheme.onSurface.withValues(alpha: 0.06),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 200,
+              height: 22,
+              color: scheme.onSurface.withValues(alpha: 0.06),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _JadwalPrompt extends StatelessWidget {
+  const _JadwalPrompt({
+    required this.message,
+    required this.cta,
+    required this.onTap,
+  });
+  final String message;
+  final String cta;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.terracotta.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(Icons.location_off_outlined,
+              color: AppColors.terracotta, size: 22),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'JADWAL SHOLAT',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.8,
+                  color: AppColors.terracotta,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                message,
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface.withValues(alpha: 0.78),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        _CtaChip(label: cta, onTap: onTap),
+      ],
+    );
+  }
+}
+
+class _CtaChip extends StatefulWidget {
+  const _CtaChip({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_CtaChip> createState() => _CtaChipState();
+}
+
+class _CtaChipState extends State<_CtaChip> {
+  bool _hover = false;
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.terracotta,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: _hover
+                ? [
+                    BoxShadow(
+                      color: AppColors.terracotta.withValues(alpha: 0.32),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Text(
+            widget.label,
+            style: const TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
         ),
       ),

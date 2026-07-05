@@ -699,14 +699,18 @@ class _JadwalNextHero extends StatefulWidget {
 }
 
 class _JadwalNextHeroState extends State<_JadwalNextHero> {
+  /// Berapa lama bubble tetap tampilkan "Sudah Masuk Waktu [X]" setelah
+  /// waktu adzan lewat sebelum roll ke prayer berikutnya.
+  static const Duration _activeWindow = Duration(minutes: 15);
+
   Timer? _ticker;
   bool _hover = false;
 
   @override
   void initState() {
     super.initState();
-    // Rebuild tiap 30 detik supaya countdown akurat.
-    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+    // Rebuild tiap detik supaya countdown detik akurat.
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
   }
@@ -717,6 +721,35 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
     super.dispose();
   }
 
+  /// Cari prayer yang jam-nya baru lewat dalam window 15 menit — kalau
+  /// ada, itu prayer "sekarang". Kalau tidak ada, return null → pakai
+  /// PrayerSchedule.next (upcoming).
+  ///
+  /// Return type sama dengan `schedule.next` (Record 3 fields) supaya
+  /// consumer bisa perlakukan sama tanpa pattern-match.
+  ({String name, DateTime time, String icon})? _activePrayer(
+      PrayerSchedule schedule, DateTime now) {
+    // Iterate reverse (mulai Isya turun) supaya prayer TERBARU yang match.
+    for (final t in schedule.allTimes.reversed) {
+      final since = now.difference(t.time);
+      if (!since.isNegative && since < _activeWindow) {
+        return t;
+      }
+    }
+    return null;
+  }
+
+  String _fmtCountdown(Duration d) {
+    if (d.isNegative) return '—';
+    final h = d.inHours;
+    final m = d.inMinutes % 60;
+    final s = d.inSeconds % 60;
+    final mm = m.toString().padLeft(2, '0');
+    final ss = s.toString().padLeft(2, '0');
+    if (h > 0) return '${h}j ${mm}m ${ss}d';
+    return '${d.inMinutes}m ${ss}d';
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -724,6 +757,7 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
     final line = isDark ? AppColors.dLine : AppColors.lLine;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     const accent = AppColors.terracotta;
+    const accentActive = AppColors.caramel;
 
     return widget.prayerAsync.when(
       loading: () => _shell(scheme, line, const _JadwalSkeleton()),
@@ -749,17 +783,70 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
             ),
           );
         }
-        final next = schedule.next;
+
         final now = DateTime.now();
-        final diff = next.time.difference(now);
-        final h = diff.inHours;
-        final m = diff.inMinutes % 60;
-        final hhmm = DateFormat.Hm().format(next.time);
-        final countdown = diff.isNegative
-            ? '—'
-            : (h > 0
-                ? '${h}j ${m.toString().padLeft(2, '0')}m'
-                : '${diff.inMinutes}m');
+        final active = _activePrayer(schedule, now);
+        final isActive = active != null;
+        final prayer = isActive ? active : schedule.next;
+        final hhmm = DateFormat.Hm().format(prayer.time);
+
+        // Warna & label state berbeda antara "sudah masuk" vs "berikutnya".
+        final color = isActive ? accentActive : accent;
+        final eyebrow =
+            isActive ? 'WAKTU SHOLAT SEKARANG' : 'ADZAN BERIKUTNYA';
+
+        Widget trailing;
+        if (isActive) {
+          trailing = Flexible(
+            child: Text(
+              'Sudah masuk waktu ${prayer.name}',
+              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Space Grotesk',
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                height: 1.15,
+                color: color,
+                letterSpacing: -0.4,
+              ),
+            ),
+          );
+        } else {
+          final diff = prayer.time.difference(now);
+          trailing = Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _fmtCountdown(diff),
+                style: TextStyle(
+                  fontFamily: 'Space Grotesk',
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  height: 1.0,
+                  color: color,
+                  letterSpacing: -0.6,
+                  fontFeatures: const [
+                    // Tabular figures — supaya angka detik gak geser layout.
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'lagi',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.2,
+                  color: scheme.onSurface.withValues(alpha: 0.55),
+                ),
+              ),
+            ],
+          );
+        }
 
         return MouseRegion(
           cursor: SystemMouseCursors.click,
@@ -782,17 +869,17 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
                   end: Alignment.bottomRight,
                   colors: [
                     scheme.surface,
-                    accent.withValues(alpha: 0.10),
+                    color.withValues(alpha: isActive ? 0.14 : 0.10),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: accent.withValues(alpha: _hover ? 0.4 : 0.24),
+                    color: color.withValues(alpha: _hover ? 0.4 : 0.24),
                     width: 1.4),
                 boxShadow: _hover
                     ? [
                         BoxShadow(
-                          color: accent.withValues(alpha: 0.20),
+                          color: color.withValues(alpha: 0.20),
                           blurRadius: 22,
                           offset: const Offset(0, 12),
                         ),
@@ -811,87 +898,61 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.16),
+                      color: color.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(Icons.mosque,
-                        color: accent, size: 28),
+                    child: Icon(Icons.mosque, color: color, size: 28),
                   ),
                   const SizedBox(width: 20),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'ADZAN BERIKUTNYA',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.8,
-                          color: accent,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            next.name,
-                            style: TextStyle(
-                              fontFamily: 'Space Grotesk',
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              height: 1.0,
-                              color: scheme.onSurface,
-                              letterSpacing: -0.5,
-                            ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          eyebrow,
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.8,
+                            color: color,
                           ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'pukul $hhmm',
-                            style: TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: scheme.onSurface
-                                  .withValues(alpha: 0.72),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              prayer.name,
+                              style: TextStyle(
+                                fontFamily: 'Space Grotesk',
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                height: 1.0,
+                                color: scheme.onSurface,
+                                letterSpacing: -0.5,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        countdown,
-                        style: TextStyle(
-                          fontFamily: 'Space Grotesk',
-                          fontSize: 34,
-                          fontWeight: FontWeight.w800,
-                          height: 1.0,
-                          color: accent,
-                          letterSpacing: -0.8,
+                            const SizedBox(width: 10),
+                            Text(
+                              'pukul $hhmm',
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.onSurface
+                                    .withValues(alpha: 0.72),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'lagi',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
-                          color:
-                              scheme.onSurface.withValues(alpha: 0.55),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 16),
+                  trailing,
                   const SizedBox(width: 20),
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
@@ -901,7 +962,7 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
                     child: Icon(
                       Icons.arrow_forward,
                       size: 18,
-                      color: accent,
+                      color: color,
                     ),
                   ),
                 ],

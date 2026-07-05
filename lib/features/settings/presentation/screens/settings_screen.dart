@@ -9,6 +9,7 @@ import '../../../../services/notification/web_notifier.dart'
     if (dart.library.io) '../../../../services/notification/web_notifier_stub.dart';
 import '../../../muhasabah/data/repositories/muhasabah_repository.dart';
 import '../../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
+import '../../../prayer_time/data/prayer_notification_scheduler.dart';
 import '../providers/settings_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -123,6 +124,23 @@ class SettingsBody extends ConsumerWidget {
                 }
               }
               settingsCtrl.update((s) => s..adhanNotifications = v);
+              // Enable → langsung jadwalkan adzan 48 jam ke depan.
+              // Disable → cancel semua (dilakukan di dalam scheduler).
+              try {
+                await ref
+                    .read(prayerNotificationSchedulerProvider)
+                    .scheduleNext48h();
+                if (v && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(kIsWeb
+                        ? 'Notif adzan aktif. Biarkan tab Nasuha terbuka supaya notif jalan.'
+                        : 'Notif adzan aktif untuk 48 jam ke depan.'),
+                    duration: const Duration(seconds: 3),
+                  ));
+                }
+              } catch (_) {
+                // Best-effort, jangan blocking UI.
+              }
             },
           ),
           SwitchListTile(
@@ -149,6 +167,11 @@ class SettingsBody extends ConsumerWidget {
                 }
               }
               settingsCtrl.update((s) => s..reminderNotifications = v);
+              try {
+                await ref
+                    .read(prayerNotificationSchedulerProvider)
+                    .scheduleNext48h();
+              } catch (_) {}
             },
           ),
           if (kIsWeb)

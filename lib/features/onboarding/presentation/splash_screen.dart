@@ -67,7 +67,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _scheduleAdhanIfEnabled() async {
     try {
-      await ref.read(notificationServiceProvider).requestPermissions();
+      // Mobile: minta izin di splash — user flow terbiasa dgn permission
+      // dialog OS. Web: JANGAN minta di sini karena bukan user-gesture,
+      // browser bakal reject; permission diminta saat user toggle di
+      // Settings.
+      if (!kIsWeb) {
+        await ref.read(notificationServiceProvider).requestPermissions();
+      }
+      // Re-schedule prayers untuk 48h ke depan setiap app load — di web,
+      // ini bikin timer setTimeout hidup lagi tiap user buka tab.
       await ref
           .read(prayerNotificationSchedulerProvider)
           .scheduleNext48h();

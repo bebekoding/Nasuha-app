@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 /// Web-only notification helper. Membungkus `window.Notification` browser
 /// API + setTimeout-based scheduler.
@@ -92,6 +93,46 @@ class WebNotifier {
       _clearTimeout(h);
     }
     _timers.clear();
+  }
+
+  /// Subscribe device ini ke FCM push. Return token unik yang harus dikirim
+  /// ke backend untuk register jadwal adzan.
+  ///
+  /// Prasyarat: user sudah grant `Notification.permission = 'granted'` dan
+  /// Firebase config di web/index.html sudah diisi (bukan PLACEHOLDER).
+  ///
+  /// Return null bila SDK belum init / permission ditolak / VAPID salah.
+  Future<String?> subscribeToFcm() async {
+    if (!isSupported) return null;
+    try {
+      final promise = globalContext
+          .callMethod('nasuhaSubscribeToFcm'.toJS) as JSPromise?;
+      if (promise == null) return null;
+      final result = await promise.toDart;
+      if (result == null) return null;
+      // Result adalah JSString.
+      final token = (result as JSString).toDart;
+      return token.isEmpty ? null : token;
+    } catch (e) {
+      // ignore: avoid_print
+      print('[WebNotifier] subscribeToFcm error: $e');
+      return null;
+    }
+  }
+
+  /// Unsubscribe device dari FCM (dipanggil saat user matikan notif adzan
+  /// supaya server tidak kirim lagi + token gak stale).
+  Future<bool> unsubscribeFromFcm() async {
+    if (!isSupported) return false;
+    try {
+      final promise = globalContext
+          .callMethod('nasuhaUnsubscribeFromFcm'.toJS) as JSPromise?;
+      if (promise == null) return false;
+      final result = await promise.toDart;
+      return (result as JSBoolean?)?.toDart ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 }
 

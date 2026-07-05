@@ -69,6 +69,10 @@ key.properties
 # Vercel
 .vercel/
 
+# Node backend (Vercel serverless api/) — deps installed di Vercel build
+node_modules/
+package-lock.json
+
 # Drift web runtime (didownload di CI/build step, tidak perlu di repo)
 web/sqlite3.wasm
 web/drift_worker.js

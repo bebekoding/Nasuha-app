@@ -1,9 +1,24 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/firebase-messaging-sw.js", "destination": "/firebase-messaging-sw.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/send-adhan",
+      "schedule": "* * * * *"
+    }
+  ],
   "headers": [
+    {
+      "source": "/firebase-messaging-sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
     {
       "source": "/flutter_service_worker.js",
       "headers": [

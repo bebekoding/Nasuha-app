@@ -23,6 +23,9 @@ dependencies:
   # Local storage helpers (DB via Drift, lihat di bawah)
   path_provider: ^2.1.5
 
+  # HTTP client — untuk POST subscribe FCM ke backend push server.
+  http: ^1.2.2
+
   # Cloud backup (Google Drive App Folder — user owns their data)
   google_sign_in: ^6.2.2
   # Explicit web plugin — dibutuhkan supaya build web pakai Google Identity

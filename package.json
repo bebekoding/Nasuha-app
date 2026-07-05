@@ -1,0 +1,14 @@
+{
+  "name": "nasuha-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless push notification backend untuk Nasuha PWA (Vercel functions).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "adhan": "^4.4.3",
+    "firebase-admin": "^12.7.0"
+  }
+}

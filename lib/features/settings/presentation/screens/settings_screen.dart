@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../config/theme/theme_controller.dart';
+import '../../../../services/notification/fcm_backend.dart';
 import '../../../../services/notification/web_notifier.dart'
     if (dart.library.io) '../../../../services/notification/web_notifier_stub.dart';
 import '../../../muhasabah/data/repositories/muhasabah_repository.dart';
@@ -105,7 +106,7 @@ class SettingsBody extends ConsumerWidget {
             title: const Text('Notifikasi adzan'),
             subtitle: kIsWeb
                 ? const Text(
-                    'Web: hanya berjalan saat tab Nasuha terbuka.',
+                    'PWA: notif tetap muncul walau tab tertutup (via FCM push).',
                     style: TextStyle(fontSize: 12),
                   )
                 : null,
@@ -124,16 +125,38 @@ class SettingsBody extends ConsumerWidget {
                 }
               }
               settingsCtrl.update((s) => s..adhanNotifications = v);
-              // Enable → langsung jadwalkan adzan 48 jam ke depan.
-              // Disable → cancel semua (dilakukan di dalam scheduler).
+              // Enable → langsung jadwalkan adzan 48 jam ke depan
+              // (setTimeout foreground) + subscribe FCM push (backend
+              // trigger saat tab tertutup).
+              // Disable → cancel semua + unsubscribe FCM.
               try {
                 await ref
                     .read(prayerNotificationSchedulerProvider)
                     .scheduleNext48h();
+                if (v && kIsWeb) {
+                  // Subscribe FCM: dapat token, POST ke backend Vercel
+                  // supaya cron push adzan real bahkan saat tab closed.
+                  final fcmToken =
+                      await WebNotifier.instance.subscribeToFcm();
+                  final lat = settings.lastLatitude;
+                  final lng = settings.lastLongitude;
+                  if (fcmToken != null && lat != null && lng != null) {
+                    await subscribeToBackendPush(
+                      fcmToken: fcmToken,
+                      lat: lat,
+                      lng: lng,
+                      calcMethod: settings.calculationMethod,
+                    );
+                  }
+                } else if (!v && kIsWeb) {
+                  // User matikan → hapus FCM token supaya backend gak
+                  // kirim lagi.
+                  await WebNotifier.instance.unsubscribeFromFcm();
+                }
                 if (v && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(kIsWeb
-                        ? 'Notif adzan aktif. Biarkan tab Nasuha terbuka supaya notif jalan.'
+                        ? 'Notif adzan aktif. Push muncul walau tab tertutup.'
                         : 'Notif adzan aktif untuk 48 jam ke depan.'),
                     duration: const Duration(seconds: 3),
                   ));

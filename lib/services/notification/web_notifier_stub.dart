@@ -24,4 +24,6 @@ class WebNotifier {
       false;
   void cancel(int id) {}
   void cancelAll() {}
+  Future<String?> subscribeToFcm() async => null;
+  Future<bool> unsubscribeFromFcm() async => false;
 }

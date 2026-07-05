@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -385,13 +386,62 @@ class _MedallionHeroState extends State<_MedallionHero>
 // TIER LADDER — kanan
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _TierLadder extends StatelessWidget {
+class _TierLadder extends StatefulWidget {
   const _TierLadder({required this.progress});
   final RankProgress progress;
 
   @override
+  State<_TierLadder> createState() => _TierLadderState();
+}
+
+class _TierLadderState extends State<_TierLadder> {
+  static const double _rowHeight = 76;
+  static const double _rowGap = 8;
+  static const int _visibleRows = 7;
+
+  late final ScrollController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
+  }
+
+  @override
+  void didUpdateWidget(covariant _TierLadder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.progress.tier.level != widget.progress.tier.level) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _scrollToCurrent() {
+    if (!_ctrl.hasClients) return;
+    final currentIdx = kRankTiers.indexWhere(
+        (t) => t.level == widget.progress.tier.level);
+    if (currentIdx < 0) return;
+    final rowStride = _rowHeight + _rowGap;
+    // Bawa current tier ke posisi ke-4 (index 3) supaya 3 tier di atas
+    // + saat ini + 3 tier di bawah terlihat sekaligus.
+    final target = (currentIdx - 3) * rowStride;
+    _ctrl.animateTo(
+      target.clamp(0.0, _ctrl.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final viewportHeight = _rowHeight * _visibleRows + _rowGap * (_visibleRows - 1);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -415,7 +465,7 @@ class _TierLadder extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${kRankTiers.length} tier dari negatif ke puncak. Hover untuk lihat threshold XP.',
+            '${kRankTiers.length} tier dari negatif ke puncak. Scroll ke atas atau bawah untuk cek tier lain.',
             style: TextStyle(
               fontFamily: 'Plus Jakarta Sans',
               fontSize: 13,
@@ -423,14 +473,35 @@ class _TierLadder extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          for (int i = 0; i < kRankTiers.length; i++) ...[
-            _TierRow(
-              tier: kRankTiers[i],
-              currentLevel: progress.tier.level,
-              xp: progress.xp,
+          // Viewport 7 rows (3 di bawah + saat ini + 3 di atas). Scroll
+          // internal supaya user bisa cek tier lain tanpa scroll page.
+          SizedBox(
+            height: viewportHeight,
+            child: ScrollConfiguration(
+              // Enable drag scrolling di web + mouse wheel by default.
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.trackpad,
+                },
+              ),
+              child: ListView.separated(
+                controller: _ctrl,
+                itemCount: kRankTiers.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: _rowGap),
+                itemBuilder: (ctx, i) => SizedBox(
+                  height: _rowHeight,
+                  child: _TierRow(
+                    tier: kRankTiers[i],
+                    currentLevel: widget.progress.tier.level,
+                    xp: widget.progress.xp,
+                  ),
+                ),
+              ),
             ),
-            if (i < kRankTiers.length - 1) const SizedBox(height: 8),
-          ],
+          ),
         ],
       ),
     );

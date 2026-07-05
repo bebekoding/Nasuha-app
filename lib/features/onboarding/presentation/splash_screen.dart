@@ -84,9 +84,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // Ukuran logo proporsional dengan viewport — kecil di mobile, besar di
     // desktop supaya tidak nampak nyempil.
     final isDesktopWeb = kIsWeb && width >= 800;
-    final logoSize = isDesktopWeb ? 176.0 : 132.0;
-    final titleSize = isDesktopWeb ? 40.0 : 32.0;
-    final taglineSize = isDesktopWeb ? 16.0 : 14.0;
+    final logoSize = isDesktopWeb ? 280.0 : 180.0;
+    final titleSize = isDesktopWeb ? 56.0 : 36.0;
+    final taglineSize = isDesktopWeb ? 20.0 : 15.0;
     final bg = isDark ? AppColors.dBg : AppColors.lBg;
 
     return Scaffold(
@@ -95,16 +95,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(isDesktopWeb ? 40 : 28),
-              child: Image.asset(
-                'assets/icon/nasuha_icon.png',
-                width: logoSize,
-                height: logoSize,
-                fit: BoxFit.cover,
-              ),
+            // Pakai icon foreground (emblem only, tanpa background cream)
+            // supaya menyatu dengan bg splash. Tak perlu ClipRRect.
+            Image.asset(
+              'assets/icon/nasuha_icon_fg.png',
+              width: logoSize,
+              height: logoSize,
+              fit: BoxFit.contain,
             ),
-            SizedBox(height: isDesktopWeb ? 32 : 24),
+            SizedBox(height: isDesktopWeb ? 28 : 20),
             Text(
               AppStrings.appName,
               style: TextStyle(
@@ -112,10 +111,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 fontSize: titleSize,
                 fontWeight: FontWeight.w800,
                 color: scheme.onSurface,
-                letterSpacing: -0.6,
+                letterSpacing: -1.0,
+                height: 1.0,
               ),
             ),
-            SizedBox(height: isDesktopWeb ? 12 : 8),
+            SizedBox(height: isDesktopWeb ? 16 : 10),
             Text(
               AppStrings.tagline,
               style: TextStyle(
@@ -124,6 +124,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 fontWeight: FontWeight.w500,
                 color: scheme.onSurface.withValues(alpha: 0.72),
                 letterSpacing: 0.1,
+                height: 1.4,
               ),
             ),
           ],

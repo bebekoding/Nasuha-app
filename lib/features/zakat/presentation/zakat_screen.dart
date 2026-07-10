@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_fonts.dart';
+import '../../../config/theme/neo_style.dart';
 
 /// Hub Zakat — dua sub-menu (Zakat Mal & Zakat Fitrah) + dalil pembuka.
 ///
@@ -177,13 +178,17 @@ class _SubmenuCardState extends State<_SubmenuCard> {
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedScale(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOutQuart,
-          scale: (_pressed && !reduceMotion) ? 0.98 : 1.0,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+        child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
             curve: Curves.easeOutQuart,
+            // Neo-brutal: press masuk ke bayangan, hover terangkat.
+            transform: reduceMotion
+                ? Matrix4.identity()
+                : (_pressed
+                    ? Matrix4.translationValues(3, 3, 0)
+                    : (_hover
+                        ? Matrix4.translationValues(-2, -2, 0)
+                        : Matrix4.identity())),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -191,28 +196,13 @@ class _SubmenuCardState extends State<_SubmenuCard> {
                 end: Alignment.bottomRight,
                 colors: [
                   scheme.surface,
-                  a.withValues(alpha: isDark ? 0.12 : 0.08),
+                  NeoStyle.tint(context, a, isDark ? 0.12 : 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: a.withValues(alpha: _hover ? 0.7 : 0.5),
-                  width: 1.5),
-              boxShadow: _hover
-                  ? [
-                      BoxShadow(
-                        color: a.withValues(alpha: 0.22),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: scheme.onSurface.withValues(alpha: 0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+              border: NeoStyle.border(context),
+              boxShadow: NeoStyle.shadow(context,
+                  offset: _pressed ? 1 : (_hover ? 6 : 4)),
             ),
             child: Row(
               children: [
@@ -288,7 +278,6 @@ class _SubmenuCardState extends State<_SubmenuCard> {
                 ),
               ],
             ),
-          ),
         ),
       ),
     );

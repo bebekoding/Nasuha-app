@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/neo_style.dart';
 import '../../../core/widgets/desktop_page_shell.dart';
 import '../../../models/daily_score.dart';
 import '../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
@@ -243,14 +244,8 @@ class _HudStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: line, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.onSurface.withValues(alpha: 0.04),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: NeoStyle.border(context),
+        boxShadow: NeoStyle.shadow(context),
       ),
       child: Row(
         children: [
@@ -640,7 +635,7 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
               curve: Curves.easeOut,
               transform: (_hover && !reduceMotion)
                   ? (Matrix4.identity()
-                    ..translateByDouble(0.0, -3.0, 0.0, 1.0))
+                    ..translateByDouble(-3.0, -3.0, 0.0, 1.0))
                   : Matrix4.identity(),
               padding: const EdgeInsets.symmetric(
                   horizontal: 28, vertical: 22),
@@ -650,28 +645,14 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
                   end: Alignment.bottomRight,
                   colors: [
                     scheme.surface,
-                    color.withValues(alpha: isActive ? 0.14 : 0.10),
+                    NeoStyle.tint(
+                        context, color, isActive ? 0.14 : 0.10),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: color.withValues(alpha: _hover ? 0.68 : 0.5),
-                    width: 1.5),
-                boxShadow: _hover
-                    ? [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.20),
-                          blurRadius: 22,
-                          offset: const Offset(0, 12),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: scheme.onSurface.withValues(alpha: 0.04),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                border: NeoStyle.border(context),
+                boxShadow:
+                    NeoStyle.shadow(context, offset: _hover ? 7 : 4),
               ),
               child: Row(
                 children: [
@@ -761,7 +742,8 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: line, width: 1),
+        border: NeoStyle.border(context),
+        boxShadow: NeoStyle.shadow(context),
       ),
       child: child,
     );
@@ -1064,26 +1046,8 @@ class _FeaturedCardState extends State<_FeaturedCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
 
-    final tint = widget.accent.withValues(alpha: isDark ? 0.16 : 0.10);
-    // Outline firm same-hue (pattern "tegas" dari mobile) — kartu
-    // interaktif harus tegas terpisah dari bg cream.
-    final line = widget.accent.withValues(alpha: isDark ? 0.55 : 0.5);
-    final shadow = _hover
-        ? [
-            BoxShadow(
-              color: widget.accent.withValues(alpha: 0.28),
-              blurRadius: 32,
-              spreadRadius: 2,
-              offset: const Offset(0, 14),
-            ),
-          ]
-        : [
-            BoxShadow(
-              color: scheme.onSurface.withValues(alpha: 0.06),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ];
+    final tint =
+        NeoStyle.tint(context, widget.accent, isDark ? 0.16 : 0.10);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1094,11 +1058,11 @@ class _FeaturedCardState extends State<_FeaturedCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
+          // Neo-brutal hover: kartu terangkat menjauhi bayangan
+          // (diagonal kiri-atas), bayangan hard membesar.
           transform: (_hover && !reduceMotion)
               ? (Matrix4.identity()
-                ..translateByDouble(0.0, -6.0, 0.0, 1.0)
-                ..scaleByDouble(1.02, 1.02, 1.0, 1.0)
-                ..rotateZ(-0.005))
+                ..translateByDouble(-3.0, -3.0, 0.0, 1.0))
               : Matrix4.identity(),
           transformAlignment: Alignment.center,
           height: 320,
@@ -1111,8 +1075,9 @@ class _FeaturedCardState extends State<_FeaturedCard> {
               colors: [scheme.surface, tint],
             ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: line, width: 1.5),
-            boxShadow: shadow,
+            border: NeoStyle.border(context),
+            boxShadow:
+                NeoStyle.shadow(context, offset: _hover ? 8 : 4),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1304,7 +1269,6 @@ class _BentoTileState extends State<_BentoTile> {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
-    final line = widget.data.accent.withValues(alpha: isDark ? 0.55 : 0.5);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1316,7 +1280,8 @@ class _BentoTileState extends State<_BentoTile> {
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
           transform: (_hover && !reduceMotion)
-              ? (Matrix4.identity()..translateByDouble(0.0, -4.0, 0.0, 1.0))
+              ? (Matrix4.identity()
+                ..translateByDouble(-3.0, -3.0, 0.0, 1.0))
               : Matrix4.identity(),
           transformAlignment: Alignment.center,
           height: 168,
@@ -1327,27 +1292,14 @@ class _BentoTileState extends State<_BentoTile> {
               end: Alignment.bottomRight,
               colors: [
                 scheme.surface,
-                widget.data.accent
-                    .withValues(alpha: isDark ? 0.10 : 0.06),
+                NeoStyle.tint(context, widget.data.accent,
+                    isDark ? 0.10 : 0.06),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: line, width: 1.5),
-            boxShadow: _hover
-                ? [
-                    BoxShadow(
-                      color: widget.data.accent.withValues(alpha: 0.22),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: scheme.onSurface.withValues(alpha: 0.04),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+            border: NeoStyle.border(context),
+            boxShadow:
+                NeoStyle.shadow(context, offset: _hover ? 7 : 4),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

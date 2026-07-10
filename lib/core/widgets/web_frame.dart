@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import '../../config/theme/app_colors.dart';
 
 /// Membingkai layar aplikasi menjadi lebar "mobile-ish" saat dibuka di web
 /// desktop, sehingga HUD/tile tidak melar. Di mobile atau viewport sempit,

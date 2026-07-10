@@ -46,8 +46,13 @@ sparingly, NOT as an eyebrow on every section).
 
 ## Components
 
-- **Cards**: `surface` fill + 1px `line` border, radius 20. No uniform tinted-card
-  grids; vary size/treatment by importance. Never nested cards, never side-stripe borders.
+- **Cards (neo-brutal, ref jurnal-in)**: fill tinted per-accent DI-BLEND opaque
+  dengan surface (`NeoStyle.tint`) + border ink 1.5px (`NeoStyle.border`) + hard
+  offset shadow tanpa blur (`NeoStyle.shadow`, 4px rest / 6-8px hover / 1px pressed).
+  Press = translate(3,3) "masuk ke bayangan"; hover desktop = translate(-3,-3).
+  ⚠️ Fill WAJIB opaque — fill transparan menampakkan hard shadow di belakang box.
+  Helper: `lib/config/theme/neo_style.dart`. Radius tetap 20. Never nested cards,
+  never side-stripe borders.
 - **Hero / status (home)**: a "power" panel — level rank + score + streak as a HUD,
   energy gradient + faint glow, the one place intensity is allowed.
 - **Level ring**: circular progress (score → next level) using `gold`, with the rank

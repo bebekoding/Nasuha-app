@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/neo_style.dart';
 import '../../features/quran/data/repositories/quran_repository.dart';
 
 /// Chrome standar untuk halaman desktop PWA Nasuha.
@@ -167,25 +168,16 @@ class _BackButtonState extends State<_BackButton> {
           curve: Curves.easeOutQuart,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
           transform: (_hover && !reduceMotion)
-              ? (Matrix4.identity()..translateByDouble(0.0, -2.0, 0.0, 1.0))
+              ? (Matrix4.identity()
+                ..translateByDouble(-1.0, -1.0, 0.0, 1.0))
               : Matrix4.identity(),
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: scheme.onSurface
-                  .withValues(alpha: _hover ? 0.55 : 0.28),
-              width: 1.5,
-            ),
-            boxShadow: _hover
-                ? [
-                    BoxShadow(
-                      color: scheme.onSurface.withValues(alpha: 0.10),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : const [],
+                color: NeoStyle.inkBorder(context), width: 1.5),
+            boxShadow:
+                NeoStyle.shadow(context, offset: _hover ? 4 : 2),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -680,19 +672,8 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: line, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.onSurface.withValues(alpha: 0.16),
-            blurRadius: 48,
-            offset: const Offset(0, 24),
-          ),
-          BoxShadow(
-            color: scheme.onSurface.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: NeoStyle.border(context),
+        boxShadow: NeoStyle.shadow(context, offset: 6),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1109,24 +1090,20 @@ class _NavProfileChipState extends State<_NavProfileChip> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutQuart,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
           transform: (_hover && !reduceMotion)
-              ? (Matrix4.identity()..translateByDouble(0.0, -2.0, 0.0, 1.0))
+              ? (Matrix4.identity()
+                ..translateByDouble(-1.0, -1.0, 0.0, 1.0))
               : Matrix4.identity(),
           decoration: BoxDecoration(
             color: scheme.primary,
             borderRadius: BorderRadius.circular(999),
-            boxShadow: _hover
-                ? [
-                    BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.36),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : const [],
+            border: Border.all(
+                color: NeoStyle.inkBorder(context), width: 1.5),
+            boxShadow:
+                NeoStyle.shadow(context, offset: _hover ? 5 : 3),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1212,16 +1189,18 @@ class _NasuhaPillButtonState extends State<NasuhaPillButton> {
         : const EdgeInsets.symmetric(horizontal: 22, vertical: 13);
     final fontSize = widget.compact ? 11.5 : 12.5;
 
+    // Neo-brutal press: tombol "masuk" ke arah bayangan.
     Matrix4 transform = Matrix4.identity();
     if (!reduceMotion) {
       if (_pressed) {
         transform = Matrix4.identity()
-          ..scaleByDouble(0.96, 0.96, 1.0, 1.0);
+          ..translateByDouble(2.0, 2.0, 0.0, 1.0);
       } else if (_hover) {
         transform = Matrix4.identity()
-          ..translateByDouble(0.0, -2.0, 0.0, 1.0);
+          ..translateByDouble(-1.0, -1.0, 0.0, 1.0);
       }
     }
+    final shadowOffset = _pressed ? 1.0 : (_hover ? 5.0 : 3.0);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1236,7 +1215,7 @@ class _NasuhaPillButtonState extends State<NasuhaPillButton> {
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutQuart,
           padding: pad,
           transform: transform,
@@ -1244,16 +1223,8 @@ class _NasuhaPillButtonState extends State<NasuhaPillButton> {
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: base, width: 1.5),
-            boxShadow: (_hover && !_pressed)
-                ? [
-                    BoxShadow(
-                      color: base.withValues(alpha: 0.32),
-                      blurRadius: 16,
-                      offset: const Offset(0, 7),
-                    ),
-                  ]
-                : const [],
+            border: Border.all(color: NeoStyle.inkBorder(context), width: 1.5),
+            boxShadow: NeoStyle.shadow(context, offset: shadowOffset),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1379,20 +1350,11 @@ class _HoverLiftCardState extends State<HoverLiftCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
-    final accent = widget.accent ?? scheme.onSurface;
-    final borderColor =
-        widget.borderColor ?? accent.withValues(alpha: 0.22);
 
-    Matrix4 transform;
-    if (_hover && !reduceMotion) {
-      transform = Matrix4.identity()
-        ..translateByDouble(0.0, -widget.lift, 0.0, 1.0);
-      if (widget.scale != 1.0) {
-        transform.scaleByDouble(widget.scale, widget.scale, 1.0, 1.0);
-      }
-    } else {
-      transform = Matrix4.identity();
-    }
+    // Neo-brutal hover: kartu terangkat diagonal menjauhi bayangan hard.
+    final transform = (_hover && !reduceMotion)
+        ? (Matrix4.identity()..translateByDouble(-3.0, -3.0, 0.0, 1.0))
+        : Matrix4.identity();
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1410,22 +1372,9 @@ class _HoverLiftCardState extends State<HoverLiftCard> {
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(widget.borderRadius),
-            border: Border.all(color: borderColor, width: 1.2),
-            boxShadow: _hover
-                ? [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.22),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: scheme.onSurface.withValues(alpha: 0.04),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+            border: NeoStyle.border(context),
+            boxShadow:
+                NeoStyle.shadow(context, offset: _hover ? 6 : 3),
           ),
           child: widget.child,
         ),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/neo_style.dart';
 import '../../../config/theme/theme_controller.dart' show sharedPrefsProvider;
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/desktop_page_shell.dart'
@@ -353,21 +354,13 @@ class _MuhasabahPromptCard extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                scheme.primary.withValues(alpha: 0.16),
-                scheme.tertiary.withValues(alpha: 0.10),
+                NeoStyle.tint(context, scheme.primary, 0.16),
+                NeoStyle.tint(context, scheme.tertiary, 0.10),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: scheme.primary.withValues(alpha: 0.5), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withValues(alpha: 0.22),
-                blurRadius: 20,
-                spreadRadius: -6,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            border: NeoStyle.border(context),
+            boxShadow: NeoStyle.shadow(context),
           ),
           child: Row(
             children: [
@@ -485,20 +478,12 @@ class _NextPrayerCardState extends State<_NextPrayerCard> {
             end: Alignment.bottomRight,
             colors: [
               scheme.surface,
-              color.withValues(alpha: isDark ? 0.18 : 0.12),
+              NeoStyle.tint(context, color, isDark ? 0.18 : 0.12),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.18),
-              blurRadius: 14,
-              spreadRadius: -3,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          border: NeoStyle.border(context),
+          boxShadow: NeoStyle.shadow(context),
         ),
         child: Row(
           children: [
@@ -594,18 +579,11 @@ class _LocationPromptCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: NeoStyle.tint(
+                context, scheme.surfaceContainerHighest, 0.5),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.5)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 12,
-                spreadRadius: -2,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            border: NeoStyle.border(context),
+            boxShadow: NeoStyle.shadow(context),
           ),
           child: Row(
             children: [
@@ -685,43 +663,30 @@ class _MenuTileState extends State<_MenuTile> {
       onTapUp: (_) => _setPressed(false),
       onTapCancel: () => _setPressed(false),
       onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
+      child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
           curve: Curves.easeOut,
+          // Neo-brutal press: kartu "masuk" ke halaman — geser ke arah
+          // bayangan sambil bayangannya mengecil.
+          transform: _pressed
+              ? Matrix4.translationValues(3, 3, 0)
+              : Matrix4.identity(),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            // Gradient tint diagonal (vocabulary bento desktop) + firm
-            // same-hue outline supaya tiap tile tegas di atas cream.
+            // Fill gradient tint per-accent (identitas fitur) + garis ink
+            // + hard shadow (vocabulary jurnal-in) supaya box tegas.
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: _pressed
-                  ? [
-                      color.withValues(alpha: 0.34),
-                      color.withValues(alpha: 0.22),
-                    ]
-                  : [
-                      color.withValues(alpha: 0.26),
-                      color.withValues(alpha: 0.12),
-                    ],
+              colors: [
+                NeoStyle.tint(context, color, 0.26),
+                NeoStyle.tint(context, color, 0.12),
+              ],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: color.withValues(alpha: 0.65), width: 1.5),
-            boxShadow: _pressed
-                ? null
-                : [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.22),
-                      blurRadius: 14,
-                      spreadRadius: -3,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+            border: NeoStyle.border(context),
+            boxShadow:
+                NeoStyle.shadow(context, offset: _pressed ? 1 : 4),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -782,7 +747,6 @@ class _MenuTileState extends State<_MenuTile> {
               ),
             ],
           ),
-        ),
       ),
     );
   }

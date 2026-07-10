@@ -16,7 +16,6 @@ class AppConstants {
 
   // Storage keys
   static const String prefsThemeMode = 'pref_theme_mode';
-  static const String prefsOnboardingDone = 'pref_onboarding_done';
   static const String prefsCalculationMethod = 'pref_calc_method';
   static const String prefsBiometricEnabled = 'pref_biometric';
   static const String prefsCloudSyncEnabled = 'pref_cloud_sync';

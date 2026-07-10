@@ -642,7 +642,7 @@ class _RecapPanel extends StatelessWidget {
             Expanded(
               child: _MetricTile(
                 accent: AppColors.caramel,
-                icon: Icons.savings,
+                icon: Icons.paid,
                 label: 'LIFETIME',
                 value: 'Rp ${rp.format(lifetime)}',
                 sub: '$lifetimeCount catatan total',

@@ -6,8 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/theme/app_colors.dart';
-import '../../../config/theme/theme_controller.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../settings/presentation/providers/settings_providers.dart';
 import '../../../services/notification/notification_service.dart';
@@ -36,8 +34,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final isDesktopWeb = kIsWeb && width >= 800;
     await Future.delayed(Duration(milliseconds: isDesktopWeb ? 1500 : 1200));
     if (!mounted) return;
-    final prefs = ref.read(sharedPrefsProvider);
-    final done = prefs.getBool(AppConstants.prefsOnboardingDone) ?? false;
 
     // Fire-and-forget side jobs.
     unawaited(
@@ -47,19 +43,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     if (!mounted) return;
 
-    if (!done) {
-      // Di desktop web, skip onboarding walkthrough (portrait mobile flow
-      // tidak cocok di viewport lebar). Mark done + langsung ke home.
-      if (isDesktopWeb) {
-        await prefs.setBool(AppConstants.prefsOnboardingDone, true);
-        if (!mounted) return;
-        context.go('/');
-        return;
-      }
-      context.go('/onboarding');
-      return;
-    }
-
+    // Tak ada walkthrough onboarding — langsung ke home (atau lock screen
+    // kalau biometric lock aktif).
     final settings = ref.read(settingsControllerProvider);
     final lockOn = settings.biometricLock;
     context.go(lockOn ? '/lock' : '/');

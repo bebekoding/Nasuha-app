@@ -241,6 +241,7 @@ class _DesktopTopNavState extends State<DesktopTopNav> {
     '/quran',
     '/dzikir',
     '/sholat-sunnah',
+    '/zakat',
     '/sedekah',
   ];
 
@@ -569,6 +570,7 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
     (icon: Icons.menu_book, label: 'Al-Quran', route: '/quran'),
     (icon: Icons.fingerprint, label: 'Dzikir', route: '/dzikir'),
     (icon: Icons.mosque, label: 'Sholat Sunnah', route: '/sholat-sunnah'),
+    (icon: Icons.paid, label: 'Zakat', route: '/zakat'),
     (icon: Icons.volunteer_activism, label: 'Sedekah', route: '/sedekah'),
   ];
 
@@ -637,6 +639,19 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
           rows: ['Dhuha', 'Tahajud', 'Rawatib'],
           cta: 'LIHAT PANDUAN',
           route: '/sholat-sunnah',
+        );
+      case 3:
+        return const _MegaPreviewData(
+          icon: Icons.paid,
+          accent: AppColors.goldLight,
+          title: 'Zakat',
+          desc: 'Hitung kewajiban zakatmu.',
+          rows: [
+            'Zakat Mal — nisab 85 g emas',
+            'Zakat Fitrah — 2,5 kg/jiwa',
+          ],
+          cta: 'HITUNG ZAKAT',
+          route: '/zakat',
         );
       default:
         return const _MegaPreviewData(

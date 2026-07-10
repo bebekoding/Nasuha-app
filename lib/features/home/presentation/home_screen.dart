@@ -261,6 +261,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     onTap: () => context.push('/sedekah'),
                   ),
                   _MenuTile(
+                    icon: Icons.paid,
+                    label: 'Zakat',
+                    subtitle: 'Mal · Fitrah',
+                    color: const Color(0xFFC1923C),
+                    onTap: () => context.push('/zakat'),
+                  ),
+                  _MenuTile(
                     icon: Icons.bar_chart,
                     label: AppStrings.analytics,
                     subtitle: 'Statistik',

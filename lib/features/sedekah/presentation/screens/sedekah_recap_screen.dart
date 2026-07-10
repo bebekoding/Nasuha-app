@@ -136,7 +136,7 @@ class _SedekahRecapScreenState extends ConsumerState<SedekahRecapScreen> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.savings_outlined, color: _green),
+              const Icon(Icons.paid_outlined, color: _green),
               const SizedBox(width: 12),
               const Expanded(
                   child: Text('Total sepanjang waktu',

@@ -22,7 +22,6 @@ import '../../features/sholat_sunnah/presentation/screens/sholat_sunnah_desktop_
 import '../../features/sholat_sunnah/presentation/screens/sholat_sunnah_detail_screen.dart';
 import '../../features/sholat_sunnah/presentation/screens/sholat_sunnah_screen.dart';
 import '../../features/onboarding/presentation/lock_screen.dart';
-import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/prayer_time/presentation/screens/prayer_time_desktop_screen.dart';
 import '../../features/prayer_time/presentation/screens/prayer_time_screen.dart';
@@ -39,6 +38,9 @@ import '../../features/sedekah/presentation/screens/sedekah_desktop_screen.dart'
 import '../../features/sedekah/presentation/screens/sedekah_history_screen.dart';
 import '../../features/sedekah/presentation/screens/sedekah_recap_screen.dart';
 import '../../features/sedekah/presentation/screens/sedekah_screen.dart';
+import '../../features/zakat/presentation/zakat_fitrah_screen.dart';
+import '../../features/zakat/presentation/zakat_mal_screen.dart';
+import '../../features/zakat/presentation/zakat_screen.dart';
 import '../../features/settings/presentation/screens/backup_desktop_screen.dart';
 import '../../features/settings/presentation/screens/backup_screen.dart';
 import '../../features/settings/presentation/screens/settings_desktop_screen.dart';
@@ -107,9 +109,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/lock', builder: (_, __) => _framed(const LockScreen())),
-      GoRoute(
-          path: '/onboarding',
-          builder: (_, __) => _framed(const OnboardingScreen())),
       GoRoute(
         path: '/',
         builder: (ctx, __) {
@@ -263,6 +262,36 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           build: (c) => SedekahRecapScreen(chromeless: c),
           eyebrow: 'REKAP SEDEKAH',
           maxWidth: 960,
+        ),
+      ),
+      GoRoute(
+        path: '/zakat',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => ZakatScreen(chromeless: c),
+          eyebrow: 'ZAKAT',
+          currentRoute: '/zakat',
+          maxWidth: 720,
+        ),
+      ),
+      GoRoute(
+        path: '/zakat/mal',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => ZakatMalScreen(chromeless: c),
+          eyebrow: 'ZAKAT MAL',
+          currentRoute: '/zakat',
+          maxWidth: 720,
+        ),
+      ),
+      GoRoute(
+        path: '/zakat/fitrah',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => ZakatFitrahScreen(chromeless: c),
+          eyebrow: 'ZAKAT FITRAH',
+          currentRoute: '/zakat',
+          maxWidth: 720,
         ),
       ),
       GoRoute(

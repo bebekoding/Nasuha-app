@@ -5,12 +5,6 @@
     { "source": "/firebase-messaging-sw.js", "destination": "/firebase-messaging-sw.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
-  "crons": [
-    {
-      "path": "/api/cron/send-adhan",
-      "schedule": "* * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/firebase-messaging-sw.js",

@@ -14,6 +14,20 @@ class LocationService {
   Future<Position?> getCurrent({
     Duration timeout = const Duration(seconds: 12),
   }) async {
+    // Hard-timeout membungkus SELURUH alur — bukan cuma getCurrentPosition.
+    // Di web, requestPermission() bisa menggantung selamanya bila prompt
+    // izin diabaikan/ditahan browser; tanpa outer timeout, UI (Kiblat,
+    // Jadwal Sholat) ikut menggantung di state loading.
+    try {
+      return await _getCurrentInner().timeout(timeout);
+    } on TimeoutException {
+      return _lastKnown();
+    } catch (_) {
+      return _lastKnown();
+    }
+  }
+
+  Future<Position?> _getCurrentInner() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       return _lastKnown();
@@ -32,9 +46,7 @@ class LocationService {
       return await Geolocator.getCurrentPosition(
         locationSettings:
             const LocationSettings(accuracy: LocationAccuracy.medium),
-      ).timeout(timeout);
-    } on TimeoutException {
-      return _lastKnown();
+      );
     } catch (_) {
       return _lastKnown();
     }

@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,6 +35,7 @@ class QiblaDesktopScreen extends ConsumerWidget {
                   child: _CompassPanel(
                     bearingAsync: bearingAsync,
                     headingAsync: headingAsync,
+                    onRetry: () => ref.invalidate(qiblaCoordsProvider),
                   ),
                 ),
                 const SizedBox(width: 24),
@@ -99,9 +99,11 @@ class _CompassPanel extends StatelessWidget {
   const _CompassPanel({
     required this.bearingAsync,
     required this.headingAsync,
+    required this.onRetry,
   });
   final AsyncValue<double?> bearingAsync;
   final AsyncValue<double?> headingAsync;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -123,35 +125,18 @@ class _CompassPanel extends StatelessWidget {
       ),
       child: bearingAsync.when(
         loading: () => const _LoadingBlock(msg: 'Mendapatkan lokasi…'),
-        error: (e, _) => _MessageBlock(
-          icon: Icons.error_outline,
-          title: 'Tidak bisa ambil lokasi',
-          message: '$e',
-          accent: AppColors.clay,
-        ),
+        error: (_, __) => _NoLocationBlock(onRetry: onRetry),
         data: (bearing) {
           if (bearing == null) {
-            return const _MessageBlock(
-              icon: Icons.location_off_outlined,
-              title: 'Lokasi tidak tersedia',
-              message:
-                  'Aktifkan izin lokasi di browser agar Nasuha bisa menghitung sudut ke Ka\'bah.',
-              accent: AppColors.terracotta,
-            );
+            return _NoLocationBlock(onRetry: onRetry);
           }
           return headingAsync.when(
             loading: () =>
                 _StaticCompass(bearing: bearing, headingKnown: false),
-            error: (e, _) => _MessageBlock(
-              icon: Icons.explore_off_outlined,
-              title: 'Compass tak tersedia',
-              message: kIsWeb
-                  ? 'Browser desktop biasanya tidak expose magnetometer. '
-                      'Buka Nasuha di HP untuk kompas real-time. Sementara, '
-                      'sudut absolut ke Ka\'bah bisa dibaca di panel kanan.'
-                  : '$e',
-              accent: AppColors.terracotta,
-            ),
+            // Provider kompas tak pernah error (service memetakan
+            // kegagalan platform → null), tapi jaga-jaga: fallback statis.
+            error: (_, __) =>
+                _StaticCompass(bearing: bearing, headingKnown: false),
             data: (heading) {
               if (heading == null) {
                 return _StaticCompass(
@@ -662,6 +647,43 @@ class _LoadingBlock extends StatelessWidget {
                 fontSize: 13,
                 color: scheme.onSurface.withValues(alpha: 0.72),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Blok lokasi-tak-tersedia + tombol coba lagi + petunjuk fallback
+/// (lokasi tersimpan dari Jadwal Sholat otomatis dipakai bila ada).
+class _NoLocationBlock extends StatelessWidget {
+  const _NoLocationBlock({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 500,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const _MessageBlock(
+              icon: Icons.location_off_outlined,
+              title: 'Lokasi tidak tersedia',
+              message:
+                  'Izinkan akses lokasi di browser, atau buka Jadwal '
+                  'Sholat sekali supaya lokasimu tersimpan. Kiblat akan '
+                  'memakainya otomatis.',
+              accent: AppColors.terracotta,
+            ),
+            const SizedBox(height: 20),
+            NasuhaPillButton(
+              label: 'COBA LAGI',
+              showArrow: false,
+              compact: true,
+              onTap: onRetry,
             ),
           ],
         ),

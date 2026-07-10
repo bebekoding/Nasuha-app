@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/theme_controller.dart' show sharedPrefsProvider;
 import '../../../core/constants/app_strings.dart';
+import '../../../core/widgets/desktop_page_shell.dart'
+    show DesktopSunburstBackdrop;
 import '../../../services/database/legacy_isar_check.dart';
 import '../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
 import '../../muhasabah/presentation/providers/muhasabah_providers.dart';
@@ -98,9 +103,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final muhasabahOn = ref.watch(muhasabahEnabledProvider);
     final muhasabahRoute = muhasabahOn ? '/muhasabah' : '/muhasabah/intro';
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
+      body: Stack(
+        children: [
+          // Sunburst rays halus di belakang header — signature visual
+          // desktop dibawa ke mobile (light only, subtle).
+          if (!isDark)
+            const Positioned.fill(
+              child: IgnorePointer(child: DesktopSunburstBackdrop()),
+            ),
+          SafeArea(
+            child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -111,24 +127,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _greeting(settings.displayName),
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: 2),
+                          // Eyebrow tanggal uppercase tracked — port dari
+                          // hero desktop.
                           Text(
                             DateFormat('EEEE, d MMMM y', 'id_ID')
-                                .format(DateTime.now()),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outline),
+                                .format(DateTime.now())
+                                .toUpperCase(),
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.8,
+                              color: scheme.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _greeting(settings.displayName),
+                            style: TextStyle(
+                              fontFamily: 'Space Grotesk',
+                              fontSize: 26,
+                              height: 1.1,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                              color: scheme.onSurface,
+                            ),
                           ),
                         ],
                       ),
@@ -192,10 +215,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   order: 2,
                   child: Text(
                     'Menu',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontFamily: 'Space Grotesk',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ),
@@ -278,7 +304,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
           ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -330,7 +358,8 @@ class _MuhasabahPromptCard extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: scheme.primary.withValues(alpha: 0.25)),
+            border: Border.all(
+                color: scheme.primary.withValues(alpha: 0.5), width: 1.5),
             boxShadow: [
               BoxShadow(
                 color: scheme.primary.withValues(alpha: 0.22),
@@ -379,75 +408,171 @@ class _MuhasabahPromptCard extends StatelessWidget {
   }
 }
 
-class _NextPrayerCard extends StatelessWidget {
+/// Bubble jadwal sholat live — port dari desktop _JadwalNextHero:
+/// countdown per detik (tabular figures), state "sudah masuk waktu"
+/// dengan window 15 menit, aksen terracotta firm.
+class _NextPrayerCard extends StatefulWidget {
   const _NextPrayerCard({required this.schedule});
 
   final PrayerSchedule schedule;
 
   @override
-  Widget build(BuildContext context) {
-    final n = schedule.next;
-    final d = n.time.difference(DateTime.now());
+  State<_NextPrayerCard> createState() => _NextPrayerCardState();
+}
+
+class _NextPrayerCardState extends State<_NextPrayerCard> {
+  static const Duration _activeWindow = Duration(minutes: 15);
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    final reduceMotion =
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+            .disableAnimations;
+    // Detik live bikin kartu terasa hidup; kalau reduce-motion aktif,
+    // cukup refresh per menit.
+    _ticker = Timer.periodic(
+      Duration(seconds: reduceMotion ? 60 : 1),
+      (_) {
+        if (mounted) setState(() {});
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  ({String name, DateTime time, String icon})? _activePrayer(DateTime now) {
+    for (final t in widget.schedule.allTimes.reversed) {
+      final since = now.difference(t.time);
+      if (!since.isNegative && since < _activeWindow) return t;
+    }
+    return null;
+  }
+
+  String _fmtCountdown(Duration d) {
+    if (d.isNegative) return '—';
     final h = d.inHours;
     final m = d.inMinutes % 60;
-    final scheme = Theme.of(context).colorScheme;
+    final s = d.inSeconds % 60;
+    final mm = m.toString().padLeft(2, '0');
+    final ss = s.toString().padLeft(2, '0');
+    if (h > 0) return '${h}j ${mm}m';
+    return '${d.inMinutes}m ${ss}d';
+  }
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => context.push('/prayer'),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.5)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 12,
-                spreadRadius: -2,
-                offset: const Offset(0, 6),
-              ),
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final now = DateTime.now();
+    final active = _activePrayer(now);
+    final isActive = active != null;
+    final prayer = isActive ? active : widget.schedule.next;
+    final color = isActive ? AppColors.caramel : AppColors.terracotta;
+
+    return _Pressable(
+      onTap: () => context.push('/prayer'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              scheme.surface,
+              color.withValues(alpha: isDark ? 0.18 : 0.12),
             ],
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(n.icon, style: const TextStyle(fontSize: 22)),
+          borderRadius: BorderRadius.circular(20),
+          border:
+              Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.18),
+              blurRadius: 14,
+              spreadRadius: -3,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(13),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Sholat ${n.name}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 15)),
-                    Text(
-                      'Pukul ${DateFormat('HH:mm').format(n.time)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.outline),
+              child: Icon(Icons.mosque, color: color, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isActive ? 'WAKTU SHOLAT SEKARANG' : 'ADZAN BERIKUTNYA',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                      color: color,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${prayer.name} · ${DateFormat('HH:mm').format(prayer.time)}',
+                    style: TextStyle(
+                      fontFamily: 'Space Grotesk',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                h > 0 ? '~${h}j ${m}m' : '~$m menit',
-                style: TextStyle(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18),
+            ),
+            const SizedBox(width: 10),
+            if (isActive)
+              Icon(Icons.notifications_active, color: color, size: 22)
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _fmtCountdown(prayer.time.difference(now)),
+                    style: TextStyle(
+                      fontFamily: 'Space Grotesk',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      height: 1.0,
+                      color: color,
+                      letterSpacing: -0.4,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'lagi',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.0,
+                      color: scheme.onSurface.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -569,9 +694,21 @@ class _MenuTileState extends State<_MenuTile> {
           curve: Curves.easeOut,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            // Clearly-tinted fill + a firm same-hue outline so each tile reads
-            // distinctly against the cream background.
-            color: color.withValues(alpha: _pressed ? 0.30 : 0.20),
+            // Gradient tint diagonal (vocabulary bento desktop) + firm
+            // same-hue outline supaya tiap tile tegas di atas cream.
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: _pressed
+                  ? [
+                      color.withValues(alpha: 0.34),
+                      color.withValues(alpha: 0.22),
+                    ]
+                  : [
+                      color.withValues(alpha: 0.26),
+                      color.withValues(alpha: 0.12),
+                    ],
+            ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
                 color: color.withValues(alpha: 0.65), width: 1.5),
@@ -590,28 +727,56 @@ class _MenuTileState extends State<_MenuTile> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.30),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: color.withValues(alpha: 0.45)),
-                ),
-                child: Icon(widget.icon, color: color, size: 21),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.30),
+                      borderRadius: BorderRadius.circular(14),
+                      border:
+                          Border.all(color: color.withValues(alpha: 0.45)),
+                    ),
+                    child: Icon(widget.icon, color: color, size: 21),
+                  ),
+                  // Arrow bubble mini — terisi saat ditekan (affordance
+                  // CTA konsisten dengan kartu desktop).
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 140),
+                    curve: Curves.easeOut,
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _pressed ? color : Colors.transparent,
+                      border: Border.all(
+                          color: color.withValues(alpha: 0.7), width: 1.3),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: 12,
+                      color: _pressed ? Colors.white : color,
+                    ),
+                  ),
+                ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(widget.label,
                       style: TextStyle(
+                          fontFamily: 'Space Grotesk',
                           color: scheme.onSurface,
                           fontSize: 15,
+                          letterSpacing: -0.2,
                           fontWeight: FontWeight.w700)),
                   const SizedBox(height: 1),
                   Text(widget.subtitle,
                       style: TextStyle(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 11.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w500)),
                 ],
               ),
@@ -638,21 +803,31 @@ class _Reveal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Reduce-motion: langsung tampil tanpa animasi entrance.
+    if (MediaQuery.of(context).disableAnimations) return child;
     final start = (order * 0.07).clamp(0.0, 0.45);
     final anim = CurvedAnimation(
       parent: controller,
       curve: Interval(start, (start + 0.55).clamp(0.0, 1.0),
-          curve: Curves.easeOutCubic),
+          curve: Curves.easeOutQuart),
     );
     return AnimatedBuilder(
       animation: anim,
-      builder: (context, child) => Opacity(
-        opacity: anim.value,
-        child: Transform.translate(
-          offset: Offset(0, (1 - anim.value) * 22),
-          child: child,
-        ),
-      ),
+      builder: (context, child) {
+        final t = anim.value;
+        // Pop-in: fade + rise + scale halus (0.96→1) — playful tanpa
+        // bounce/elastic.
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * 20),
+            child: Transform.scale(
+              scale: 0.96 + 0.04 * t,
+              child: child,
+            ),
+          ),
+        );
+      },
       child: child,
     );
   }

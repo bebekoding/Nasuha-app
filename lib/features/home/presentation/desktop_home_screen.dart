@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../core/widgets/desktop_page_shell.dart';
 import '../../../models/daily_score.dart';
 import '../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
 import '../../muhasabah/presentation/providers/muhasabah_providers.dart';
@@ -68,7 +68,7 @@ class _DesktopHomeScreenState extends ConsumerState<DesktopHomeScreen>
           // Sunburst rays halus (fore.coffee vibe) — hanya di light.
           if (!isDark)
             const Positioned.fill(
-              child: IgnorePointer(child: _SunburstBackdrop()),
+              child: IgnorePointer(child: DesktopSunburstBackdrop()),
             ),
           SingleChildScrollView(
             child: Center(
@@ -79,11 +79,7 @@ class _DesktopHomeScreenState extends ConsumerState<DesktopHomeScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _TopNav(
-                        onProfile: () => context.push('/profile'),
-                        onBackup: () => context.push('/backup'),
-                        onSettings: () => context.push('/settings'),
-                      ),
+                      const DesktopTopNav(currentRoute: '/'),
                       const SizedBox(height: 56),
                       _Reveal(
                         controller: _entrance,
@@ -150,221 +146,6 @@ class _DesktopHomeScreenState extends ConsumerState<DesktopHomeScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TOP NAV
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _TopNav extends StatelessWidget {
-  const _TopNav({
-    required this.onProfile,
-    required this.onBackup,
-    required this.onSettings,
-  });
-
-  final VoidCallback onProfile;
-  final VoidCallback onBackup;
-  final VoidCallback onSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    final ink = Theme.of(context).colorScheme.onSurface;
-    return SizedBox(
-      height: 72,
-      child: Row(
-        children: [
-          // Wordmark
-          Text(
-            'Nasuha',
-            style: TextStyle(
-              fontFamily: 'Space Grotesk',
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: ink,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(width: 40),
-          _NavLink(label: 'Beranda', active: true, onTap: () {}),
-          _NavLink(
-              label: 'Al-Quran', onTap: () => context.push('/quran')),
-          _NavLink(
-              label: 'Jadwal Sholat', onTap: () => context.push('/prayer')),
-          _NavLink(
-              label: 'Analitik', onTap: () => context.push('/analytics')),
-          _NavLink(label: 'Rank', onTap: () => context.push('/rank')),
-          _NavLink(label: 'Pemulihan', onTap: onBackup),
-          const Spacer(),
-          _IconAction(
-            icon: Icons.settings_outlined,
-            tooltip: 'Pengaturan',
-            onTap: onSettings,
-          ),
-          const SizedBox(width: 8),
-          _ProfileChip(onTap: onProfile),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavLink extends StatefulWidget {
-  const _NavLink({
-    required this.label,
-    required this.onTap,
-    this.active = false,
-  });
-  final String label;
-  final VoidCallback onTap;
-  final bool active;
-
-  @override
-  State<_NavLink> createState() => _NavLinkState();
-}
-
-class _NavLinkState extends State<_NavLink> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = widget.active
-        ? scheme.primary
-        : (_hover ? scheme.primary : scheme.onSurface);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 15,
-                  fontWeight:
-                      widget.active ? FontWeight.w700 : FontWeight.w500,
-                  color: color,
-                ),
-                child: Text(widget.label),
-              ),
-              const SizedBox(height: 4),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                height: 2,
-                width: widget.active ? 20 : 0,
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  borderRadius: BorderRadius.circular(1),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _IconAction extends StatelessWidget {
-  const _IconAction({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: tooltip,
-      child: IconButton(
-        onPressed: onTap,
-        icon: Icon(icon, size: 22),
-        color: scheme.onSurface.withValues(alpha: 0.72),
-        style: IconButton.styleFrom(
-          backgroundColor: scheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-                color: scheme.outline.withValues(alpha: 0.18), width: 1),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileChip extends StatefulWidget {
-  const _ProfileChip({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  State<_ProfileChip> createState() => _ProfileChipState();
-}
-
-class _ProfileChipState extends State<_ProfileChip> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: scheme.primary,
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: _hover
-                ? [
-                    BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.32),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : const [],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.person_outline,
-                  size: 18, color: Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                'Akun',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -874,8 +655,8 @@ class _JadwalNextHeroState extends State<_JadwalNextHero> {
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: color.withValues(alpha: _hover ? 0.4 : 0.24),
-                    width: 1.4),
+                    color: color.withValues(alpha: _hover ? 0.68 : 0.5),
+                    width: 1.5),
                 boxShadow: _hover
                     ? [
                         BoxShadow(
@@ -1078,56 +859,54 @@ class _JadwalPrompt extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        _CtaChip(label: cta, onTap: onTap),
+        NasuhaPillButton(
+          label: cta.toUpperCase(),
+          compact: true,
+          showArrow: true,
+          onTap: onTap,
+        ),
       ],
     );
   }
 }
 
-class _CtaChip extends StatefulWidget {
-  const _CtaChip({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
+/// Lingkaran panah outline yang terisi accent saat parent hover —
+/// affordance CTA konsisten untuk semua kartu (CauseHouse cue).
+/// Hover state dikendalikan parent (bukan MouseRegion sendiri) supaya
+/// bubble ikut menyala saat seluruh kartu di-hover.
+class _ArrowBubble extends StatelessWidget {
+  const _ArrowBubble({
+    required this.hover,
+    required this.accent,
+    this.size = 34,
+  });
 
-  @override
-  State<_CtaChip> createState() => _CtaChipState();
-}
+  final bool hover;
+  final Color accent;
+  final double size;
 
-class _CtaChipState extends State<_CtaChip> {
-  bool _hover = false;
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.terracotta,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: _hover
-                ? [
-                    BoxShadow(
-                      color: AppColors.terracotta.withValues(alpha: 0.32),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : const [],
-          ),
-          child: Text(
-            widget.label,
-            style: const TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutQuart,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: hover ? accent : Colors.transparent,
+        border: Border.all(color: accent, width: 1.5),
+      ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutQuart,
+        transform: Matrix4.translationValues(
+            (hover && !reduceMotion) ? 1.5 : 0, 0, 0),
+        child: Icon(
+          Icons.arrow_forward,
+          size: size * 0.5,
+          color: hover ? Colors.white : accent,
         ),
       ),
     );
@@ -1286,7 +1065,9 @@ class _FeaturedCardState extends State<_FeaturedCard> {
     final reduceMotion = MediaQuery.of(context).disableAnimations;
 
     final tint = widget.accent.withValues(alpha: isDark ? 0.16 : 0.10);
-    final line = widget.accent.withValues(alpha: isDark ? 0.32 : 0.24);
+    // Outline firm same-hue (pattern "tegas" dari mobile) — kartu
+    // interaktif harus tegas terpisah dari bg cream.
+    final line = widget.accent.withValues(alpha: isDark ? 0.55 : 0.5);
     final shadow = _hover
         ? [
             BoxShadow(
@@ -1330,7 +1111,7 @@ class _FeaturedCardState extends State<_FeaturedCard> {
               colors: [scheme.surface, tint],
             ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: line, width: 1.4),
+            border: Border.all(color: line, width: 1.5),
             boxShadow: shadow,
           ),
           child: Column(
@@ -1394,14 +1175,8 @@ class _FeaturedCardState extends State<_FeaturedCard> {
                       color: widget.accent,
                     ),
                   ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                    transform: Matrix4.translationValues(
-                        _hover && !reduceMotion ? 8 : 0, 0, 0),
-                    child: Icon(Icons.arrow_forward,
-                        size: 18, color: widget.accent),
-                  ),
+                  const SizedBox(width: 10),
+                  _ArrowBubble(hover: _hover, accent: widget.accent),
                 ],
               ),
             ],
@@ -1527,8 +1302,9 @@ class _BentoTileState extends State<_BentoTile> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
-    final line = widget.data.accent.withValues(alpha: 0.22);
+    final line = widget.data.accent.withValues(alpha: isDark ? 0.55 : 0.5);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1546,9 +1322,17 @@ class _BentoTileState extends State<_BentoTile> {
           height: 168,
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: scheme.surface,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                scheme.surface,
+                widget.data.accent
+                    .withValues(alpha: isDark ? 0.10 : 0.06),
+              ],
+            ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: line, width: 1.2),
+            border: Border.all(color: line, width: 1.5),
             boxShadow: _hover
                 ? [
                     BoxShadow(
@@ -1609,14 +1393,10 @@ class _BentoTileState extends State<_BentoTile> {
                       ],
                     ),
                   ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                    transform: Matrix4.translationValues(
-                        _hover && !reduceMotion ? 6 : 0, 0, 0),
-                    child: Icon(Icons.arrow_forward,
-                        size: 18, color: widget.data.accent),
-                  ),
+                  _ArrowBubble(
+                      hover: _hover,
+                      accent: widget.data.accent,
+                      size: 30),
                 ],
               ),
             ],
@@ -1671,47 +1451,6 @@ class _Footer extends StatelessWidget {
       ),
     );
   }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SUNBURST — dekorasi bg halus (light only)
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _SunburstBackdrop extends StatelessWidget {
-  const _SunburstBackdrop();
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _SunburstPainter());
-  }
-}
-
-class _SunburstPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final origin = Offset(size.width / 2, -140);
-    const rayCount = 22;
-    final paint = Paint()
-      ..color = const Color(0xFFEDE1CE).withValues(alpha: 0.6)
-      ..style = PaintingStyle.fill;
-    for (int i = 0; i < rayCount; i++) {
-      final angle = math.pi * i / rayCount;
-      final w = 24.0;
-      canvas.save();
-      canvas.translate(origin.dx, origin.dy);
-      canvas.rotate(angle);
-      final path = Path()
-        ..moveTo(-w / 2, 0)
-        ..lineTo(w / 2, 0)
-        ..lineTo(w * 6, size.height + 200)
-        ..lineTo(-w * 6, size.height + 200)
-        ..close();
-      canvas.drawPath(path, paint);
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

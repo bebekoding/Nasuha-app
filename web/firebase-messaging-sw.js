@@ -15,12 +15,12 @@ importScripts(
     'https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: 'PLACEHOLDER_FIREBASE_API_KEY',
+  apiKey: 'AIzaSyDUlzHAIxlcuosSgC0b8XUSCqoT7Jplr14',
   authDomain: 'nasuha-500606.firebaseapp.com',
   projectId: 'nasuha-500606',
-  storageBucket: 'nasuha-500606.appspot.com',
-  messagingSenderId: 'PLACEHOLDER_SENDER_ID',
-  appId: 'PLACEHOLDER_APP_ID',
+  storageBucket: 'nasuha-500606.firebasestorage.app',
+  messagingSenderId: '110479313586',
+  appId: '1:110479313586:web:b17d5665ab73bc634017ab',
 });
 
 const messaging = firebase.messaging();

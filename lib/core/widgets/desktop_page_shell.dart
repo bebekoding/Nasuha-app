@@ -1,15 +1,19 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme/app_colors.dart';
+import '../../features/quran/data/repositories/quran_repository.dart';
 
 /// Chrome standar untuk halaman desktop PWA Nasuha.
 ///
-/// Menyediakan top nav Nasuha (wordmark + link + settings + Akun chip),
-/// max-width container 1240px terpusat, sunburst backdrop halus (light),
-/// dan optional back button + page eyebrow di bawah nav.
+/// Menyediakan top nav Nasuha (wordmark + link + mega-menu Ibadah +
+/// settings + Akun chip), max-width container 1240px terpusat, sunburst
+/// backdrop halus (light), dan optional back button + page eyebrow di
+/// bawah nav.
 ///
 /// Dipakai oleh semua screen kecuali DesktopHomeScreen (yang punya
 /// full-width hero + section rhythm sendiri) dan flow onboarding.
@@ -151,6 +155,7 @@ class _BackButtonState extends State<_BackButton> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -159,19 +164,25 @@ class _BackButtonState extends State<_BackButton> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          curve: Curves.easeOutQuart,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          transform: (_hover && !reduceMotion)
+              ? (Matrix4.identity()..translateByDouble(0.0, -2.0, 0.0, 1.0))
+              : Matrix4.identity(),
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-                color: scheme.outline.withValues(alpha: 0.22), width: 1),
+              color: scheme.onSurface
+                  .withValues(alpha: _hover ? 0.55 : 0.28),
+              width: 1.5,
+            ),
             boxShadow: _hover
                 ? [
                     BoxShadow(
-                      color: scheme.onSurface.withValues(alpha: 0.08),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
+                      color: scheme.onSurface.withValues(alpha: 0.10),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
                   ]
                 : const [],
@@ -181,7 +192,7 @@ class _BackButtonState extends State<_BackButton> {
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
+                curve: Curves.easeOutQuart,
                 transform: Matrix4.translationValues(_hover ? -3 : 0, 0, 0),
                 child: Icon(Icons.arrow_back,
                     size: 16, color: scheme.onSurface),
@@ -208,71 +219,167 @@ class _BackButtonState extends State<_BackButton> {
 // TOP NAV — dipakai DesktopPageShell & DesktopHomeScreen
 // ═══════════════════════════════════════════════════════════════════════════
 
-class DesktopTopNav extends StatelessWidget {
+class DesktopTopNav extends StatefulWidget {
   const DesktopTopNav({super.key, this.currentRoute});
 
   final String? currentRoute;
 
   @override
+  State<DesktopTopNav> createState() => _DesktopTopNavState();
+}
+
+class _DesktopTopNavState extends State<DesktopTopNav> {
+  final OverlayPortalController _megaCtrl = OverlayPortalController();
+  final LayerLink _navLink = LayerLink();
+  Timer? _closeTimer;
+  bool _megaOpen = false;
+
+  static const Object _megaTapGroup = 'nasuha-mega-menu';
+
+  /// Route yang tergolong dalam mega-menu Ibadah (untuk state aktif trigger).
+  static const List<String> _megaRoutes = [
+    '/quran',
+    '/dzikir',
+    '/sholat-sunnah',
+    '/sedekah',
+  ];
+
+  @override
+  void dispose() {
+    _closeTimer?.cancel();
+    super.dispose();
+  }
+
+  void _openMega() {
+    _closeTimer?.cancel();
+    if (!_megaCtrl.isShowing) _megaCtrl.show();
+    if (!_megaOpen) setState(() => _megaOpen = true);
+  }
+
+  void _toggleMega() => _megaOpen ? _closeMega() : _openMega();
+
+  /// Grace 160ms supaya mouse bisa nyebrang gap trigger → panel tanpa
+  /// menu keburu nutup (hover intent).
+  void _scheduleClose() {
+    _closeTimer?.cancel();
+    _closeTimer = Timer(const Duration(milliseconds: 160), _closeMega);
+  }
+
+  void _closeMega() {
+    _closeTimer?.cancel();
+    if (_megaCtrl.isShowing) _megaCtrl.hide();
+    if (_megaOpen && mounted) setState(() => _megaOpen = false);
+  }
+
+  void _go(String route) {
+    _closeMega();
+    GoRouter.of(context).push(route);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ink = Theme.of(context).colorScheme.onSurface;
-    return SizedBox(
-      height: 72,
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => GoRouter.of(context).go('/'),
-            behavior: HitTestBehavior.opaque,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: Text(
-                'Nasuha',
-                style: TextStyle(
-                  fontFamily: 'Space Grotesk',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: ink,
-                  letterSpacing: -0.4,
-                ),
+    final route = widget.currentRoute;
+    final megaActive =
+        _megaRoutes.any((r) => route?.startsWith(r) ?? false);
+
+    return OverlayPortal(
+      controller: _megaCtrl,
+      overlayChildBuilder: (context) {
+        return CompositedTransformFollower(
+          link: _navLink,
+          showWhenUnlinked: false,
+          targetAnchor: Alignment.bottomLeft,
+          followerAnchor: Alignment.topLeft,
+          offset: const Offset(0, 8),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: TapRegion(
+              groupId: _megaTapGroup,
+              onTapOutside: (_) => _closeMega(),
+              child: MouseRegion(
+                onEnter: (_) => _closeTimer?.cancel(),
+                onExit: (_) => _scheduleClose(),
+                child: _MegaPanel(onNavigate: _go),
               ),
             ),
           ),
-          const SizedBox(width: 40),
-          DesktopNavLink(
-            label: 'Beranda',
-            active: currentRoute == '/' || currentRoute == null,
-            onTap: () => GoRouter.of(context).go('/'),
+        );
+      },
+      child: CompositedTransformTarget(
+        link: _navLink,
+        child: SizedBox(
+          height: 72,
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => GoRouter.of(context).go('/'),
+                behavior: HitTestBehavior.opaque,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Text(
+                    'Nasuha',
+                    style: TextStyle(
+                      fontFamily: 'Space Grotesk',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: ink,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 40),
+              DesktopNavLink(
+                label: 'Beranda',
+                active: route == '/' || route == null,
+                onTap: () => GoRouter.of(context).go('/'),
+              ),
+              TapRegion(
+                groupId: _megaTapGroup,
+                child: MouseRegion(
+                  onEnter: (_) => _openMega(),
+                  onExit: (_) => _scheduleClose(),
+                  child: _MegaTrigger(
+                    label: 'Ibadah',
+                    active: megaActive,
+                    open: _megaOpen,
+                    onTap: _toggleMega,
+                  ),
+                ),
+              ),
+              DesktopNavLink(
+                label: 'Jadwal Sholat',
+                active: route == '/prayer',
+                onTap: () => GoRouter.of(context).push('/prayer'),
+              ),
+              DesktopNavLink(
+                label: 'Arah Kiblat',
+                active: route == '/qibla',
+                onTap: () => GoRouter.of(context).push('/qibla'),
+              ),
+              DesktopNavLink(
+                label: 'Analitik',
+                active: route == '/analytics',
+                onTap: () => GoRouter.of(context).push('/analytics'),
+              ),
+              DesktopNavLink(
+                label: 'Rank',
+                active: route == '/rank',
+                onTap: () => GoRouter.of(context).push('/rank'),
+              ),
+              const Spacer(),
+              _NavIconAction(
+                icon: Icons.settings_outlined,
+                tooltip: 'Pengaturan',
+                onTap: () => GoRouter.of(context).push('/settings'),
+              ),
+              const SizedBox(width: 10),
+              _NavProfileChip(
+                  onTap: () => GoRouter.of(context).push('/profile')),
+            ],
           ),
-          DesktopNavLink(
-            label: 'Al-Quran',
-            active: currentRoute?.startsWith('/quran') ?? false,
-            onTap: () => GoRouter.of(context).push('/quran'),
-          ),
-          DesktopNavLink(
-            label: 'Analitik',
-            active: currentRoute == '/analytics',
-            onTap: () => GoRouter.of(context).push('/analytics'),
-          ),
-          DesktopNavLink(
-            label: 'Rank',
-            active: currentRoute == '/rank',
-            onTap: () => GoRouter.of(context).push('/rank'),
-          ),
-          DesktopNavLink(
-            label: 'Pemulihan',
-            active: currentRoute == '/backup',
-            onTap: () => GoRouter.of(context).push('/backup'),
-          ),
-          const Spacer(),
-          _NavIconAction(
-            icon: Icons.settings_outlined,
-            tooltip: 'Pengaturan',
-            onTap: () => GoRouter.of(context).push('/settings'),
-          ),
-          const SizedBox(width: 8),
-          _NavProfileChip(
-              onTap: () => GoRouter.of(context).push('/profile')),
-        ],
+        ),
       ),
     );
   }
@@ -300,9 +407,9 @@ class _DesktopNavLinkState extends State<DesktopNavLink> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = widget.active
+    final color = (widget.active || _hover)
         ? scheme.primary
-        : (_hover ? scheme.primary : scheme.onSurface);
+        : scheme.onSurface;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -311,30 +418,616 @@ class _DesktopNavLinkState extends State<DesktopNavLink> {
         onTap: widget.onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Column(
+          child: _UnderlinedNavLabel(
+            show: widget.active || _hover,
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutQuart,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 15,
+                fontWeight:
+                    widget.active ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+              child: Text(widget.label),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Label nav + underline yang "menggambar" dari kiri saat show (CauseHouse
+/// cue). Underline = paint-only scaleX transform, tanpa intrinsic layout.
+class _UnderlinedNavLabel extends StatelessWidget {
+  const _UnderlinedNavLabel({required this.show, required this.child});
+  final bool show;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(padding: const EdgeInsets.only(bottom: 6), child: child),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 2,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutQuart,
+            transform: Matrix4.diagonal3Values(show ? 1.0 : 0.001, 1.0, 1.0),
+            transformAlignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Trigger "Ibadah ▾" untuk mega-menu — visual identik DesktopNavLink
+/// plus chevron yang berputar saat panel terbuka.
+class _MegaTrigger extends StatefulWidget {
+  const _MegaTrigger({
+    required this.label,
+    required this.active,
+    required this.open,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final bool open;
+  final VoidCallback onTap;
+
+  @override
+  State<_MegaTrigger> createState() => _MegaTriggerState();
+}
+
+class _MegaTriggerState extends State<_MegaTrigger> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final lit = widget.active || widget.open || _hover;
+    final color = lit ? scheme.primary : scheme.onSurface;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: _UnderlinedNavLabel(
+            show: widget.active || widget.open || _hover,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutQuart,
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 15,
+                    fontWeight: widget.active
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: color,
+                  ),
+                  child: Text(widget.label),
+                ),
+                const SizedBox(width: 3),
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutQuart,
+                  turns: widget.open ? 0.5 : 0.0,
+                  child: Icon(Icons.keyboard_arrow_down,
+                      size: 17, color: color),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MEGA PANEL — dropdown "Ibadah" ala CauseHouse: link display besar +
+// hairline divider di kiri, highlight card di kanan, utility row bawah.
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _MegaPanel extends ConsumerStatefulWidget {
+  const _MegaPanel({required this.onNavigate});
+  final void Function(String route) onNavigate;
+
+  @override
+  ConsumerState<_MegaPanel> createState() => _MegaPanelState();
+}
+
+class _MegaPanelState extends ConsumerState<_MegaPanel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entrance;
+
+  /// Index link yang sedang di-hover — preview kanan mengikuti.
+  int _hovered = 0;
+
+  static const List<({IconData icon, String label, String route})> _links = [
+    (icon: Icons.menu_book, label: 'Al-Quran', route: '/quran'),
+    (icon: Icons.fingerprint, label: 'Dzikir', route: '/dzikir'),
+    (icon: Icons.mosque, label: 'Sholat Sunnah', route: '/sholat-sunnah'),
+    (icon: Icons.volunteer_activism, label: 'Sedekah', route: '/sedekah'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _entrance = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _entrance.dispose();
+    super.dispose();
+  }
+
+  /// Konten preview kanan per link — data ringan dari app state
+  /// (bookmark Quran) atau daftar konten yang memang tersedia di fitur.
+  _MegaPreviewData _previewFor(int index) {
+    switch (index) {
+      case 0:
+        final lastRead = ref.watch(lastReadProvider).valueOrNull;
+        if (lastRead != null) {
+          return _MegaPreviewData(
+            icon: Icons.menu_book,
+            accent: AppColors.caramel,
+            title: lastRead.surahName,
+            desc: 'Terakhir dibaca — ayat ${lastRead.verseNumber}.',
+            rows: const ['114 surah lengkap', 'Mode Fokus & Terjemah'],
+            cta: 'LANJUTKAN',
+            route:
+                '/quran/${lastRead.surahNumber}?ayah=${lastRead.verseNumber}',
+          );
+        }
+        return const _MegaPreviewData(
+          icon: Icons.menu_book,
+          accent: AppColors.caramel,
+          title: 'Al-Quran',
+          desc: 'Mushaf digital 114 surah.',
+          rows: ['Al-Fatihah', 'Yasin', 'Al-Mulk'],
+          cta: 'MULAI BACA',
+          route: '/quran',
+        );
+      case 1:
+        return const _MegaPreviewData(
+          icon: Icons.fingerprint,
+          accent: AppColors.ochre,
+          title: 'Dzikir',
+          desc: 'Dzikir harian dengan penghitung.',
+          rows: [
+            'Dzikir Pagi',
+            'Dzikir Petang',
+            'Setelah Sholat Fardhu',
+          ],
+          cta: 'BUKA DZIKIR',
+          route: '/dzikir',
+        );
+      case 2:
+        return const _MegaPreviewData(
+          icon: Icons.mosque,
+          accent: AppColors.coffee,
+          title: 'Sholat Sunnah',
+          desc: 'Niat + tata cara lengkap.',
+          rows: ['Dhuha', 'Tahajud', 'Rawatib'],
+          cta: 'LIHAT PANDUAN',
+          route: '/sholat-sunnah',
+        );
+      default:
+        return const _MegaPreviewData(
+          icon: Icons.volunteer_activism,
+          accent: AppColors.clay,
+          title: 'Sedekah',
+          desc: 'Catat & pantau sedekah harianmu.',
+          rows: ['Catat cepat radial dial', 'Rekap & grafik'],
+          cta: 'CATAT SEDEKAH',
+          route: '/sedekah',
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final line = isDark ? AppColors.dLine : AppColors.lLine;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    final preview = _previewFor(_hovered);
+
+    final panel = Container(
+      width: 620,
+      padding: const EdgeInsets.fromLTRB(28, 24, 28, 18),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: line, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.onSurface.withValues(alpha: 0.16),
+            blurRadius: 48,
+            offset: const Offset(0, 24),
+          ),
+          BoxShadow(
+            color: scheme.onSurface.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'IBADAH HARIAN',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2.0,
+                          color:
+                              scheme.onSurface.withValues(alpha: 0.55),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      for (int i = 0; i < _links.length; i++) ...[
+                        if (i > 0)
+                          Container(
+                              height: 1,
+                              color: line.withValues(alpha: 0.7)),
+                        _MegaLink(
+                          label: _links[i].label,
+                          highlighted: _hovered == i,
+                          onHover: () => setState(() => _hovered = i),
+                          onTap: () =>
+                              widget.onNavigate(_links[i].route),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 26),
+                Container(width: 1, color: line.withValues(alpha: 0.7)),
+                const SizedBox(width: 26),
+                SizedBox(
+                  width: 224,
+                  child: AnimatedSwitcher(
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
+                    switchInCurve: Curves.easeOutQuart,
+                    switchOutCurve: Curves.easeInQuad,
+                    transitionBuilder: (child, anim) => FadeTransition(
+                      opacity: anim,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.04, 0),
+                          end: Offset.zero,
+                        ).animate(anim),
+                        child: child,
+                      ),
+                    ),
+                    child: _MegaPreviewCard(
+                      key: ValueKey(_hovered),
+                      data: preview,
+                      onTap: () => widget.onNavigate(preview.route),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(height: 1, color: line.withValues(alpha: 0.7)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _MegaFootLink(
+                icon: Icons.settings_backup_restore,
+                label: 'Pemulihan data',
+                onTap: () => widget.onNavigate('/backup'),
+              ),
+              const SizedBox(width: 20),
+              _MegaFootLink(
+                icon: Icons.settings_outlined,
+                label: 'Pengaturan',
+                onTap: () => widget.onNavigate('/settings'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (reduceMotion) return panel;
+
+    return AnimatedBuilder(
+      animation: _entrance,
+      builder: (context, child) {
+        final t = Curves.easeOutQuart.transform(_entrance.value);
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * -8),
+            child: child,
+          ),
+        );
+      },
+      child: panel,
+    );
+  }
+}
+
+class _MegaLink extends StatelessWidget {
+  const _MegaLink({
+    required this.label,
+    required this.highlighted,
+    required this.onHover,
+    required this.onTap,
+  });
+
+  final String label;
+
+  /// true saat preview kanan sedang menampilkan konten link ini.
+  final bool highlighted;
+  final VoidCallback onHover;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => onHover(),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutQuart,
+          padding: EdgeInsets.only(
+            top: 13,
+            bottom: 13,
+            left: highlighted ? 8 : 0,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutQuart,
+                  style: TextStyle(
+                    fontFamily: 'Space Grotesk',
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                    letterSpacing: -0.3,
+                    color:
+                        highlighted ? scheme.primary : scheme.onSurface,
+                  ),
+                  child: Text(label),
+                ),
+              ),
+              AnimatedSlide(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutQuart,
+                offset: highlighted ? Offset.zero : const Offset(-0.3, 0),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: highlighted ? 1.0 : 0.0,
+                  child: Icon(Icons.arrow_forward,
+                      size: 18, color: scheme.primary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Data konten preview kanan mega-menu.
+class _MegaPreviewData {
+  const _MegaPreviewData({
+    required this.icon,
+    required this.accent,
+    required this.title,
+    required this.desc,
+    required this.rows,
+    required this.cta,
+    required this.route,
+  });
+
+  final IconData icon;
+  final Color accent;
+  final String title;
+  final String desc;
+  final List<String> rows;
+  final String cta;
+  final String route;
+}
+
+class _MegaPreviewCard extends StatelessWidget {
+  const _MegaPreviewCard({super.key, required this.data, required this.onTap});
+
+  final _MegaPreviewData data;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = data.accent;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: isDark ? 0.14 : 0.08),
+            accent.withValues(alpha: isDark ? 0.24 : 0.18),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border:
+            Border.all(color: accent.withValues(alpha: 0.5), width: 1.5),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(data.icon, color: accent, size: 22),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            data.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'Space Grotesk',
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              height: 1.1,
+              letterSpacing: -0.3,
+              color: scheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            data.desc,
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 13,
+              height: 1.5,
+              color: scheme.onSurface.withValues(alpha: 0.78),
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (final row in data.rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_forward, size: 12, color: accent),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      row,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurface.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 14),
+          NasuhaPillButton(
+            label: data.cta,
+            compact: true,
+            showArrow: true,
+            onTap: onTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MegaFootLink extends StatefulWidget {
+  const _MegaFootLink({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_MegaFootLink> createState() => _MegaFootLinkState();
+}
+
+class _MegaFootLinkState extends State<_MegaFootLink> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = _hover
+        ? scheme.primary
+        : scheme.onSurface.withValues(alpha: 0.62);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
+              Icon(widget.icon, size: 15, color: color),
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
                 style: TextStyle(
                   fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 15,
-                  fontWeight:
-                      widget.active ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                   color: color,
-                ),
-                child: Text(widget.label),
-              ),
-              const SizedBox(height: 4),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                height: 2,
-                width: widget.active ? 20 : 0,
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  borderRadius: BorderRadius.circular(1),
                 ),
               ),
             ],
@@ -368,9 +1061,10 @@ class _NavIconAction extends StatelessWidget {
         style: IconButton.styleFrom(
           backgroundColor: scheme.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(999),
             side: BorderSide(
-                color: scheme.outline.withValues(alpha: 0.22), width: 1),
+                color: scheme.onSurface.withValues(alpha: 0.28),
+                width: 1.5),
           ),
         ),
       ),
@@ -392,6 +1086,7 @@ class _NavProfileChipState extends State<_NavProfileChip> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -400,35 +1095,177 @@ class _NavProfileChipState extends State<_NavProfileChip> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          curve: Curves.easeOutQuart,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+          transform: (_hover && !reduceMotion)
+              ? (Matrix4.identity()..translateByDouble(0.0, -2.0, 0.0, 1.0))
+              : Matrix4.identity(),
           decoration: BoxDecoration(
             color: scheme.primary,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(999),
             boxShadow: _hover
                 ? [
                     BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.32),
+                      color: scheme.primary.withValues(alpha: 0.36),
                       blurRadius: 18,
-                      offset: const Offset(0, 6),
+                      offset: const Offset(0, 8),
                     ),
                   ]
                 : const [],
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.person_outline, size: 18, color: Colors.white),
-              SizedBox(width: 8),
+              Icon(Icons.person_outline,
+                  size: 16, color: scheme.onPrimary),
+              const SizedBox(width: 8),
               Text(
-                'Akun',
+                'AKUN',
                 style: TextStyle(
                   fontFamily: 'Plus Jakarta Sans',
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+                  color: scheme.onPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                  letterSpacing: 1.2,
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PILL BUTTON — CTA reusable ala CauseHouse: pill firm, label uppercase
+// tracked, hover lift + shadow (filled) / fill-invert (outline).
+// ═══════════════════════════════════════════════════════════════════════════
+
+class NasuhaPillButton extends StatefulWidget {
+  const NasuhaPillButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.filled = true,
+    this.color,
+    this.showArrow = false,
+    this.compact = false,
+  });
+
+  /// Label tombol — biasakan uppercase ("BUKA JADWAL").
+  final String label;
+  final VoidCallback onTap;
+
+  /// true = pill terisi warna; false = outline yang terisi saat hover.
+  final bool filled;
+
+  /// Warna pill; default `scheme.primary` (coffee brown).
+  final Color? color;
+
+  final bool showArrow;
+
+  /// Padding & font lebih kecil untuk konteks sempit (mega panel dsb).
+  final bool compact;
+
+  @override
+  State<NasuhaPillButton> createState() => _NasuhaPillButtonState();
+}
+
+class _NasuhaPillButtonState extends State<NasuhaPillButton> {
+  bool _hover = false;
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    final base = widget.color ?? scheme.primary;
+    final onBase =
+        widget.color == null ? scheme.onPrimary : Colors.white;
+
+    // Outline variant: transparan → terisi penuh saat hover (invert).
+    final bg = widget.filled
+        ? base
+        : (_hover ? base : Colors.transparent);
+    final fg = widget.filled
+        ? onBase
+        : (_hover ? onBase : base);
+
+    final pad = widget.compact
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+        : const EdgeInsets.symmetric(horizontal: 22, vertical: 13);
+    final fontSize = widget.compact ? 11.5 : 12.5;
+
+    Matrix4 transform = Matrix4.identity();
+    if (!reduceMotion) {
+      if (_pressed) {
+        transform = Matrix4.identity()
+          ..scaleByDouble(0.96, 0.96, 1.0, 1.0);
+      } else if (_hover) {
+        transform = Matrix4.identity()
+          ..translateByDouble(0.0, -2.0, 0.0, 1.0);
+      }
+    }
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() {
+        _hover = false;
+        _pressed = false;
+      }),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutQuart,
+          padding: pad,
+          transform: transform,
+          transformAlignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: base, width: 1.5),
+            boxShadow: (_hover && !_pressed)
+                ? [
+                    BoxShadow(
+                      color: base.withValues(alpha: 0.32),
+                      blurRadius: 16,
+                      offset: const Offset(0, 7),
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutQuart,
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: fg,
+                ),
+                child: Text(widget.label),
+              ),
+              if (widget.showArrow) ...[
+                const SizedBox(width: 7),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutQuart,
+                  transform: Matrix4.translationValues(
+                      (_hover && !reduceMotion) ? 3 : 0, 0, 0),
+                  child: Icon(Icons.arrow_forward,
+                      size: widget.compact ? 14 : 16, color: fg),
+                ),
+              ],
             ],
           ),
         ),

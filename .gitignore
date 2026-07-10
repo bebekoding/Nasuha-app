@@ -76,3 +76,8 @@ package-lock.json
 # Drift web runtime (didownload di CI/build step, tidak perlu di repo)
 web/sqlite3.wasm
 web/drift_worker.js
+
+# Logo backup lokal (bukan bagian app)
+.logo_backup/
+# Harness lokal
+.claude/

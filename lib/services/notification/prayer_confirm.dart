@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../core/extensions/date_extensions.dart';
+import '../../features/muhasabah/data/elapsed_prayer_windows.dart';
 import '../../models/muhasabah_tag.dart';
 import '../database/app_database.dart';
 
@@ -92,7 +93,8 @@ Future<void> _syncMissedWithin(AppDatabase db, String dateKey) async {
       .map((e) => e.tagSlug)
       .toSet()
       .length;
-  final target = math.max(0, 5 - prayersDone);
+  final elapsed = await elapsedPrayerWindows(db, dateKey, DateTime.now());
+  final target = math.max(0, elapsed - prayersDone);
 
   final autoMissed = all
       .where((e) => e.tagSlug == _missedSlug && e.note == _autoNote)

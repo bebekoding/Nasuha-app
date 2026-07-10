@@ -11,6 +11,7 @@ import '../../../../models/muhasabah_tag.dart';
 import '../../../../models/streak.dart';
 import '../../../../services/database/app_database.dart';
 import '../../../achievements/data/achievement_engine.dart';
+import '../elapsed_prayer_windows.dart';
 
 class MuhasabahRepository {
   MuhasabahRepository(this._db, this._achievements);
@@ -287,7 +288,12 @@ class MuhasabahRepository {
         .map((e) => e.tagSlug)
         .toSet()
         .length;
-    final target = max(0, 5 - prayersDone);
+    // Hanya hitung sholat sebagai "terlewat" kalau jendela waktunya SUDAH
+    // habis. Tanpa ini, mencatat Subuh di pagi hari langsung disusul
+    // 4 × "tidak sholat" (Dzuhur..Isya) → user melihat XP -90 padahal
+    // hari belum selesai.
+    final elapsed = await elapsedPrayerWindows(_db, dateKey, DateTime.now());
+    final target = max(0, elapsed - prayersDone);
 
     final autoEntries = all
         .where((e) => e.tagSlug == _missedSlug && e.note == _autoNote)

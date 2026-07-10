@@ -48,6 +48,44 @@ class MuhasabahScreen extends ConsumerStatefulWidget {
 class _MuhasabahScreenState extends ConsumerState<MuhasabahScreen> {
   bool _syncedToday = false;
 
+  String _iso(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  Future<void> _confirmReset() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.restart_alt),
+        title: const Text('Reset Muhasabah?'),
+        content: const Text(
+          'Semua catatan amalan, skor harian, dan streak akan dihapus. '
+          'Tag amalan (Sholat, Dzikir, dll.) tidak ikut terhapus.\n\n'
+          'Tindakan ini tidak bisa dibatalkan. Lanjutkan?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await ref.read(muhasabahRepositoryProvider).resetAllData();
+    _syncedToday = false;
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Muhasabah direset. Mulai bersih.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tagsAsync = ref.watch(tagsProvider);
@@ -57,14 +95,16 @@ class _MuhasabahScreenState extends ConsumerState<MuhasabahScreen> {
     final today = DateTime.now();
 
     // Auto-sync missed prayers once per build cycle when entries are loaded.
+    // Sync BOTH kemarin (backfill setelah hari ganti) & hari ini.
     entriesAsync.whenData((_) {
       if (!_syncedToday) {
         _syncedToday = true;
-        Future.microtask(() => ref
-            .read(muhasabahRepositoryProvider)
-            .autoSyncMissedPrayers(
-              '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}',
-            ));
+        final repo = ref.read(muhasabahRepositoryProvider);
+        final yesterday = today.subtract(const Duration(days: 1));
+        Future.microtask(() async {
+          await repo.autoSyncMissedPrayers(_iso(yesterday));
+          await repo.autoSyncMissedPrayers(_iso(today));
+        });
       }
     });
 
@@ -86,6 +126,24 @@ class _MuhasabahScreenState extends ConsumerState<MuhasabahScreen> {
             icon: const Icon(Icons.history),
             tooltip: 'Riwayat',
             onPressed: () => context.push('/muhasabah/history'),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Menu',
+            icon: const Icon(Icons.more_vert),
+            onSelected: (v) {
+              if (v == 'reset') _confirmReset();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'reset',
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.restart_alt),
+                  title: Text('Reset Muhasabah'),
+                  subtitle: Text('Hapus semua catatan & skor'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

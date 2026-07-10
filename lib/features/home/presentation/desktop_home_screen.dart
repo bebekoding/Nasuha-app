@@ -162,13 +162,8 @@ class _HeroGreeting extends StatelessWidget {
   final DateTime date;
 
   String get _greeting {
-    final h = date.hour;
-    final name = displayName.isEmpty ? 'sahabat' : displayName;
-    if (h < 4) return 'Selamat malam, $name';
-    if (h < 11) return 'Selamat pagi, $name';
-    if (h < 15) return 'Selamat siang, $name';
-    if (h < 19) return 'Selamat sore, $name';
-    return 'Selamat malam, $name';
+    final name = displayName.isEmpty ? '' : ', $displayName';
+    return "Assalamu'alaikum$name";
   }
 
   @override
@@ -197,6 +192,17 @@ class _HeroGreeting extends StatelessWidget {
             fontWeight: FontWeight.w800,
             color: scheme.onSurface,
             letterSpacing: -1.2,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'warahmatullahi wabarakatuh',
+          style: TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            height: 1.3,
+            color: scheme.onSurface.withValues(alpha: 0.72),
           ),
         ),
         const SizedBox(height: 14),

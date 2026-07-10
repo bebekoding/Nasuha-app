@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/neo_style.dart';
 import '../../features/quran/data/repositories/quran_repository.dart';
+import '../../features/settings/presentation/providers/settings_providers.dart';
+import 'user_avatar.dart';
 
 /// Chrome standar untuk halaman desktop PWA Nasuha.
 ///
@@ -1068,21 +1070,22 @@ class _NavIconAction extends StatelessWidget {
   }
 }
 
-class _NavProfileChip extends StatefulWidget {
+class _NavProfileChip extends ConsumerStatefulWidget {
   const _NavProfileChip({required this.onTap});
   final VoidCallback onTap;
 
   @override
-  State<_NavProfileChip> createState() => _NavProfileChipState();
+  ConsumerState<_NavProfileChip> createState() => _NavProfileChipState();
 }
 
-class _NavProfileChipState extends State<_NavProfileChip> {
+class _NavProfileChipState extends ConsumerState<_NavProfileChip> {
   bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
+    final photoPath = ref.watch(settingsControllerProvider).photoPath;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -1092,7 +1095,7 @@ class _NavProfileChipState extends State<_NavProfileChip> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutQuart,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+          padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
           transform: (_hover && !reduceMotion)
               ? (Matrix4.identity()
                 ..translateByDouble(-1.0, -1.0, 0.0, 1.0))
@@ -1108,9 +1111,16 @@ class _NavProfileChipState extends State<_NavProfileChip> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.person_outline,
-                  size: 16, color: scheme.onPrimary),
-              const SizedBox(width: 8),
+              // Ukuran avatar dijaga senada dengan tinggi icon lama (16px) +
+              // padding: efektif ~28px bulat. Fallback icon warna onPrimary
+              // supaya kontras di atas primary pill.
+              UserAvatar(
+                photoPath: photoPath,
+                size: 28,
+                background: scheme.onPrimary.withValues(alpha: 0.18),
+                foreground: scheme.onPrimary,
+              ),
+              const SizedBox(width: 10),
               Text(
                 'AKUN',
                 style: TextStyle(

@@ -11,6 +11,7 @@ import '../../../config/theme/theme_controller.dart' show sharedPrefsProvider;
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/desktop_page_shell.dart'
     show DesktopSunburstBackdrop;
+import '../../../core/widgets/user_avatar.dart';
 import '../../../services/database/legacy_isar_check.dart';
 import '../../muhasabah/presentation/providers/muhasabah_enabled_provider.dart';
 import '../../muhasabah/presentation/providers/muhasabah_providers.dart';
@@ -144,7 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            _greeting(settings.displayName),
+                            _salamGreeting(settings.displayName),
                             style: TextStyle(
                               fontFamily: 'Space Grotesk',
                               fontSize: 26,
@@ -154,12 +155,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               color: scheme.onSurface,
                             ),
                           ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'warahmatullahi wabarakatuh',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: scheme.onSurface.withValues(alpha: 0.62),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    IconButton.filledTonal(
-                      icon: const Icon(Icons.person_outline),
-                      onPressed: () => context.push('/profile'),
+                    // Avatar profil di pojok — otomatis pakai photoPath
+                    // kalau user sudah set. Ukuran dijaga sama dengan
+                    // IconButton.filledTonal (~40px) supaya layout tak geser.
+                    Semantics(
+                      button: true,
+                      label: 'Profil',
+                      child: InkResponse(
+                        onTap: () => context.push('/profile'),
+                        radius: 26,
+                        child: UserAvatar(
+                          photoPath: settings.photoPath,
+                          size: 40,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -321,15 +343,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ];
   }
 
-  String _greeting(String? name) {
-    final h = DateTime.now().hour;
-    final base = switch (h) {
-      < 4 => 'Tahajud yang berkah',
-      < 11 => 'Selamat pagi',
-      < 15 => 'Selamat siang',
-      < 18 => 'Selamat sore',
-      _ => 'Selamat malam',
-    };
+  String _salamGreeting(String? name) {
+    const base = "Assalamu'alaikum";
     if (name != null && name.trim().isNotEmpty) {
       return '$base, ${name.split(' ').first}';
     }

@@ -312,44 +312,53 @@ const List<DzikirCategory> kDzikirCategories = [
     ],
   ),
 
-  // ──────────────────── DZIKIR SETELAH TAHAJUD ────────────────────
+  // ─────────────────────────── DZIKIR DHUHA ───────────────────────────
   DzikirCategory(
-    id: 'tahajud',
-    title: 'Dzikir Setelah Tahajud',
-    subtitle: 'Doa di sepertiga malam terakhir',
-    icon: Icons.bedtime,
+    id: 'dhuha',
+    title: 'Dzikir & Doa Dhuha',
+    subtitle: 'Dibaca setelah sholat Dhuha — waktu diijabahnya doa',
+    icon: Icons.wb_sunny,
     items: [
       DzikirItem(
-        arabic:
-            'اللَّهُمَّ لَكَ الْحَمْدُ أَنْتَ قَيِّمُ السَّمَاوَاتِ وَالْأَرْضِ وَمَنْ فِيهِنَّ، وَلَكَ الْحَمْدُ أَنْتَ نُورُ السَّمَاوَاتِ وَالْأَرْضِ وَمَنْ فِيهِنَّ',
-        latin:
-            'Allāhumma lakal-ḥamdu anta qayyimus-samāwāti wal-arḍi wa man fīhinn, wa lakal-ḥamdu anta nūrus-samāwāti wal-arḍi wa man fīhinn',
+        arabic: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ وَأَتُوبُ إِلَيْهِ',
+        latin: 'Astaghfirullāhal-\'aẓīm wa atūbu ilaih',
         translation:
-            'Ya Allah, bagi-Mu segala puji, Engkau penegak langit dan bumi serta segala yang ada di dalamnya. Bagi-Mu segala puji, Engkau cahaya langit dan bumi serta segala yang ada di dalamnya. (Bagian doa iftitah tahajud Nabi ﷺ)',
-        count: 1,
-      ),
-      DzikirItem(
-        arabic:
-            'اللَّهُمَّ اغْفِرْ لِي مَا قَدَّمْتُ وَمَا أَخَّرْتُ، وَمَا أَسْرَرْتُ وَمَا أَعْلَنْتُ، أَنْتَ الْمُقَدِّمُ وَأَنْتَ الْمُؤَخِّرُ، لَا إِلَٰهَ إِلَّا أَنْتَ',
-        latin:
-            'Allāhummaghfir lī mā qaddamtu wa mā akhkhartu, wa mā asrartu wa mā a\'lantu, antal-muqaddimu wa antal-mu\'akhkhir, lā ilāha illā anta',
-        translation:
-            'Ya Allah, ampunilah dosaku yang telah lalu dan yang akan datang, yang kusembunyikan dan yang kunyatakan. Engkau Yang Mendahulukan dan Engkau Yang Mengakhirkan. Tiada Tuhan selain Engkau.',
-        count: 1,
-      ),
-      DzikirItem(
-        arabic: 'سُبْحَانَ الْمَلِكِ الْقُدُّوسِ',
-        latin: 'Subḥānal-malikil-quddūs',
-        translation: 'Maha Suci Raja Yang Maha Suci.',
+            'Aku memohon ampun kepada Allah Yang Maha Agung dan bertaubat kepada-Nya.',
         count: 3,
+        note:
+            'Dianjurkan istighfar setelah setiap sholat. Nabi ﷺ istighfar 3× lalu membaca "Allāhumma antas-salām…" (HR. Muslim 591).',
       ),
       DzikirItem(
-        arabic: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ',
-        latin:
-            'Astaghfirullāhal-\'aẓīm allażī lā ilāha illā huwal-ḥayyul-qayyūmu wa atūbu ilaih',
+        arabic:
+            'اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ',
+        latin: 'Allāhumma innī as\'aluka min faḍlik',
         translation:
-            'Aku memohon ampun kepada Allah Yang Maha Agung, yang tiada Tuhan selain Dia, Yang Maha Hidup lagi Maha Mengurus, dan aku bertaubat kepada-Nya.',
+            'Ya Allah, sesungguhnya aku memohon kepada-Mu dari karunia-Mu.',
         count: 3,
+        note:
+            'Doa mustaka meminta rezeki halal dari karunia Allah. Selaras dengan Al-Jumu\'ah: 10 — "…dan carilah karunia Allah". Ibnu \'Abbas membacanya di waktu dhuha (atsar).',
+      ),
+      DzikirItem(
+        arabic:
+            'اللَّهُمَّ إِنِّي أَسْأَلُكَ رِزْقًا حَلَالًا طَيِّبًا مُبَارَكًا',
+        latin:
+            'Allāhumma innī as\'aluka rizqan ḥalālan ṭayyiban mubārakan',
+        translation:
+            'Ya Allah, sungguh aku memohon kepada-Mu rezeki yang halal, baik, lagi berkah.',
+        count: 3,
+        note:
+            'Kombinasi doa Nabi ﷺ minta rezeki halal-thayyib (lihat HR. Ibnu Majah 925 tentang doa dhuha bermakna serupa).',
+      ),
+      DzikirItem(
+        arabic:
+            'اللَّهُمَّ إِنَّ الضُّحَاءَ ضُحَاؤُكَ، وَالْبَهَاءَ بَهَاؤُكَ، وَالْجَمَالَ جَمَالُكَ، وَالْقُوَّةَ قُوَّتُكَ، وَالْقُدْرَةَ قُدْرَتُكَ، وَالْعِصْمَةَ عِصْمَتُكَ. اللَّهُمَّ إِنْ كَانَ رِزْقِي فِي السَّمَاءِ فَأَنْزِلْهُ، وَإِنْ كَانَ فِي الْأَرْضِ فَأَخْرِجْهُ، وَإِنْ كَانَ مُعَسَّرًا فَيَسِّرْهُ، وَإِنْ كَانَ حَرَامًا فَطَهِّرْهُ، وَإِنْ كَانَ بَعِيدًا فَقَرِّبْهُ، بِحَقِّ ضُحَائِكَ وَبَهَائِكَ وَجَمَالِكَ وَقُوَّتِكَ وَقُدْرَتِكَ، آتِنِي مَا آتَيْتَ عِبَادَكَ الصَّالِحِينَ',
+        latin:
+            'Allāhumma innaḍ-ḍuḥā\'a ḍuḥā\'uka, wal-bahā\'a bahā\'uka, wal-jamāla jamāluka, wal-quwwata quwwatuka, wal-qudrata qudratuka, wal-\'iṣmata \'iṣmatuka. Allāhumma in kāna rizqī fis-samā\'i fa-anzilhu, wa in kāna fil-arḍi fa-akhrijhu, wa in kāna mu\'assiran fa-yassirhu, wa in kāna ḥarāman fa-ṭahhirhu, wa in kāna ba\'īdan fa-qarribhu, bi ḥaqqi ḍuḥā\'ika wa bahā\'ika wa jamālika wa quwwatika wa qudratika, ātinī mā ātaita \'ibādakaṣ-ṣāliḥīn',
+        translation:
+            'Ya Allah, sungguh waktu dhuha adalah dhuha-Mu, keindahan adalah keindahan-Mu, kekuatan adalah kekuatan-Mu, kemuliaan adalah kemuliaan-Mu, kekuasaan adalah kekuasaan-Mu, dan penjagaan adalah penjagaan-Mu. Ya Allah, jika rezekiku di langit, turunkanlah; jika di bumi, keluarkanlah; jika sulit, mudahkanlah; jika haram, sucikanlah; jika jauh, dekatkanlah — dengan hak dhuha-Mu, keindahan-Mu, kekuatan-Mu, dan kekuasaan-Mu, berikanlah aku sebagaimana Engkau memberi hamba-hamba-Mu yang saleh.',
+        count: 1,
+        note:
+            'Doa dhuha yang populer, disebutkan dalam Ihya \'Ulumuddin (Al-Ghazali) dan diamalkan turun-temurun. Sanad marfu\'-nya tidak sampai derajat sahih, namun ulama membolehkan sebagai doa (bukan hadits) karena maknanya baik dan tidak menyalahi syariat.',
       ),
       DzikirItem(
         arabic:
@@ -357,8 +366,81 @@ const List<DzikirCategory> kDzikirCategories = [
         latin:
             'Rabbanā ātinā fid-dun-yā ḥasanah wa fil-ākhirati ḥasanah wa qinā \'ażāban-nār',
         translation:
-            'Ya Tuhan kami, berilah kami kebaikan di dunia dan kebaikan di akhirat, serta peliharalah kami dari azab neraka.',
+            'Ya Tuhan kami, berilah kami kebaikan di dunia dan di akhirat, serta peliharalah kami dari azab neraka. (QS. Al-Baqarah: 201)',
         count: 1,
+        note: 'Doa paling sering diucapkan Nabi ﷺ (HR. Bukhari 6389, Muslim 2690).',
+      ),
+    ],
+  ),
+
+  // ─────────────────────────── DZIKIR TAHAJUD ───────────────────────────
+  DzikirCategory(
+    id: 'tahajud',
+    title: 'Dzikir & Doa Tahajud',
+    subtitle: 'Munajat malam — waktu paling ijabah',
+    icon: Icons.bedtime,
+    items: [
+      DzikirItem(
+        arabic: 'سُبْحَانَ الْمَلِكِ الْقُدُّوسِ',
+        latin: 'Subḥānal-malikil-quddūs',
+        translation: 'Maha Suci Raja Yang Maha Suci.',
+        count: 3,
+        note:
+            'Dibaca setelah salam qiyamul lail; pada bacaan ketiga suara ditinggikan (HR. Nasa\'i 1699, Abu Dawud 1430 — sahih).',
+      ),
+      DzikirItem(
+        arabic:
+            'اللَّهُمَّ لَكَ الْحَمْدُ أَنْتَ نُورُ السَّمَاوَاتِ وَالْأَرْضِ وَمَنْ فِيهِنَّ، وَلَكَ الْحَمْدُ أَنْتَ قَيِّمُ السَّمَاوَاتِ وَالْأَرْضِ وَمَنْ فِيهِنَّ، وَلَكَ الْحَمْدُ أَنْتَ الْحَقُّ، وَوَعْدُكَ الْحَقُّ، وَلِقَاؤُكَ حَقٌّ، وَقَوْلُكَ حَقٌّ، وَالْجَنَّةُ حَقٌّ، وَالنَّارُ حَقٌّ، وَالنَّبِيُّونَ حَقٌّ، وَمُحَمَّدٌ ﷺ حَقٌّ، وَالسَّاعَةُ حَقٌّ. اللَّهُمَّ لَكَ أَسْلَمْتُ، وَبِكَ آمَنْتُ، وَعَلَيْكَ تَوَكَّلْتُ، وَإِلَيْكَ أَنَبْتُ، وَبِكَ خَاصَمْتُ، وَإِلَيْكَ حَاكَمْتُ، فَاغْفِرْ لِي مَا قَدَّمْتُ وَمَا أَخَّرْتُ، وَمَا أَسْرَرْتُ وَمَا أَعْلَنْتُ، أَنْتَ الْمُقَدِّمُ وَأَنْتَ الْمُؤَخِّرُ، لَا إِلَٰهَ إِلَّا أَنْتَ',
+        latin:
+            'Allāhumma lakal-ḥamdu anta nūrus-samāwāti wal-arḍi wa man fīhinn, wa lakal-ḥamdu anta qayyimus-samāwāti wal-arḍi wa man fīhinn, wa lakal-ḥamdu antal-ḥaqq, wa wa\'dukal-ḥaqq, wa liqā\'uka ḥaqq, wa qauluka ḥaqq, wal-jannatu ḥaqq, wan-nāru ḥaqq, wan-nabiyyūna ḥaqq, wa Muḥammadun ṣallallāhu \'alaihi wa sallam ḥaqq, was-sā\'atu ḥaqq. Allāhumma laka aslamtu, wa bika āmantu, wa \'alaika tawakkaltu, wa ilaika anabtu, wa bika khāṣamtu, wa ilaika ḥākamtu, faghfir lī mā qaddamtu wa mā akhkhartu, wa mā asrartu wa mā a\'lantu, antal-muqaddimu wa antal-mu\'akhkhir, lā ilāha illā anta',
+        translation:
+            'Ya Allah, bagi-Mu segala puji — Engkau cahaya langit & bumi dan siapa yang ada padanya. Bagi-Mu segala puji — Engkau penegaknya. Engkau-lah Al-Haqq (Yang Benar), janji-Mu benar, pertemuan dengan-Mu benar, firman-Mu benar, surga benar, neraka benar, para nabi benar, Muhammad ﷺ benar, dan hari kiamat benar. Ya Allah, kepada-Mu aku berserah, dengan-Mu aku beriman, kepada-Mu aku bertawakal, kepada-Mu aku kembali, dengan-Mu aku berhujjah, kepada-Mu aku mengadu — maka ampunilah dosaku yang telah lalu & yang akan datang, yang tersembunyi & yang terang. Engkau Yang Mendahulukan, Engkau Yang Mengakhirkan, tiada Tuhan selain Engkau.',
+        count: 1,
+        note:
+            'Doa iftitah tahajud Nabi ﷺ ketika bangun malam (HR. Bukhari 1120 & Muslim 769 dari Ibnu \'Abbas — sanad muttafaq \'alaih, sanad tertinggi).',
+      ),
+      DzikirItem(
+        arabic:
+            'اللَّهُمَّ رَبَّ جِبْرَائِيلَ وَمِيكَائِيلَ وَإِسْرَافِيلَ، فَاطِرَ السَّمَاوَاتِ وَالْأَرْضِ، عَالِمَ الْغَيْبِ وَالشَّهَادَةِ، أَنْتَ تَحْكُمُ بَيْنَ عِبَادِكَ فِيمَا كَانُوا فِيهِ يَخْتَلِفُونَ، اهْدِنِي لِمَا اخْتُلِفَ فِيهِ مِنَ الْحَقِّ بِإِذْنِكَ، إِنَّكَ تَهْدِي مَنْ تَشَاءُ إِلَى صِرَاطٍ مُسْتَقِيمٍ',
+        latin:
+            'Allāhumma rabba Jibrā\'īla wa Mīkā\'īla wa Isrāfīl, fāṭiras-samāwāti wal-arḍ, \'ālimal-ghaibi wasy-syahādah, anta taḥkumu baina \'ibādika fīmā kānū fīhi yakhtalifūn, ihdinī limakhtulifa fīhi minal-ḥaqqi bi\'iżnika, innaka tahdī man tasyā\'u ilā ṣirāṭim mustaqīm',
+        translation:
+            'Ya Allah, Tuhan Jibril, Mikail, dan Israfil, Pencipta langit & bumi, Yang mengetahui yang gaib & yang tampak — Engkau menghukumi di antara hamba-Mu tentang apa yang mereka perselisihkan. Tunjukkanlah aku pada kebenaran dari apa yang diperselisihkan, dengan izin-Mu. Sungguh Engkau memberi petunjuk siapa yang Kau kehendaki menuju jalan yang lurus.',
+        count: 1,
+        note:
+            'Doa Nabi ﷺ saat memulai qiyamul lail (HR. Muslim 770 dari Aisyah).',
+      ),
+      DzikirItem(
+        arabic:
+            'اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي',
+        latin:
+            'Allāhummaghfir lī, warḥamnī, wahdinī, wa \'āfinī, warzuqnī',
+        translation:
+            'Ya Allah, ampunilah aku, rahmatilah aku, tunjuki aku, sehatkan aku, dan berilah aku rezeki.',
+        count: 3,
+        note:
+            'Lima permintaan yang mencakup dunia & akhirat (HR. Muslim 2697 dari Thariq bin Asyyam).',
+      ),
+      DzikirItem(
+        arabic:
+            'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ',
+        latin:
+            'Astaghfirullāhal-\'aẓīm allażī lā ilāha illā huwal-ḥayyul-qayyūmu wa atūbu ilaih',
+        translation:
+            'Aku memohon ampun kepada Allah Yang Maha Agung, yang tiada Tuhan selain Dia, Yang Maha Hidup lagi Maha Mengurus, dan aku bertaubat kepada-Nya.',
+        count: 3,
+        note:
+            'Waktu sahur adalah waktu istighfar utama — "…dan yang beristighfar di waktu sahur." (QS. Adz-Dzariyat: 18, Ali \'Imran: 17). Nabi ﷺ mengabarkan Allah turun ke langit dunia sepertiga malam terakhir memanggil hamba-Nya (HR. Bukhari 1145, Muslim 758).',
+      ),
+      DzikirItem(
+        arabic:
+            'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
+        latin:
+            'Rabbanā ātinā fid-dun-yā ḥasanah wa fil-ākhirati ḥasanah wa qinā \'ażāban-nār',
+        translation:
+            'Ya Tuhan kami, berilah kami kebaikan di dunia dan akhirat, dan lindungi kami dari azab neraka. (QS. Al-Baqarah: 201)',
+        count: 1,
+        note: 'Doa terbanyak Nabi ﷺ (HR. Bukhari 6389, Muslim 2690).',
       ),
     ],
   ),

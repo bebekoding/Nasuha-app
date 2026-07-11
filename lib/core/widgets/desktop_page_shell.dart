@@ -1092,46 +1092,30 @@ class _NavProfileChipState extends ConsumerState<_NavProfileChip> {
       onExit: (_) => setState(() => _hover = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOutQuart,
-          padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
-          transform: (_hover && !reduceMotion)
-              ? (Matrix4.identity()
-                ..translateByDouble(-1.0, -1.0, 0.0, 1.0))
-              : Matrix4.identity(),
-          decoration: BoxDecoration(
-            color: scheme.primary,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-                color: NeoStyle.inkBorder(context), width: 1.5),
-            boxShadow:
-                NeoStyle.shadow(context, offset: _hover ? 5 : 3),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Ukuran avatar dijaga senada dengan tinggi icon lama (16px) +
-              // padding: efektif ~28px bulat. Fallback icon warna onPrimary
-              // supaya kontras di atas primary pill.
-              UserAvatar(
-                photoPath: photoPath,
-                size: 28,
-                background: scheme.onPrimary.withValues(alpha: 0.18),
-                foreground: scheme.onPrimary,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'AKUN',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  color: scheme.onPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
+        child: Tooltip(
+          message: 'Akun',
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOutQuart,
+            padding: const EdgeInsets.all(4),
+            transform: (_hover && !reduceMotion)
+                ? (Matrix4.identity()
+                  ..translateByDouble(-1.0, -1.0, 0.0, 1.0))
+                : Matrix4.identity(),
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: NeoStyle.inkBorder(context), width: 1.5),
+              boxShadow:
+                  NeoStyle.shadow(context, offset: _hover ? 5 : 3),
+            ),
+            child: UserAvatar(
+              photoPath: photoPath,
+              size: 34,
+              background: scheme.onPrimary.withValues(alpha: 0.18),
+              foreground: scheme.onPrimary,
+            ),
           ),
         ),
       ),

@@ -65,10 +65,14 @@ const List<SholatSunnah> kSholatSunnah = [
       'Rakaat kedua: Al-Fatihah lalu surat — dianjurkan Adh-Dhuha.',
       'Tasyahud akhir lalu salam.',
       'Boleh diulang hingga total 12 rakaat (salam tiap 2 rakaat).',
-      'Disunnahkan menutup dengan doa Dhuha.',
+      'Setelah salam terakhir: istighfar 3× "Astaghfirullāhal-\'aẓīm wa atūbu ilaih" (HR. Muslim 591).',
+      'Perbanyak "Allāhumma innī as\'aluka min faḍlik" (memohon karunia rezeki).',
+      'Tutup dengan doa Dhuha: "Allāhumma innaḍ-ḍuḥā\'a ḍuḥā\'uka…" — bacaan lengkap ada di menu Dzikir → Dzikir & Doa Dhuha.',
     ],
     keutamaan:
-        'Setiap pagi setiap persendian manusia wajib bersedekah; dua rakaat Dhuha mencukupi sedekah itu (HR. Muslim). Siapa rutin mengerjakannya, dibangunkan rumah di surga.',
+        'Setiap pagi setiap persendian manusia wajib bersedekah; dua rakaat Dhuha mencukupi sedekah itu (HR. Muslim 720). Siapa rutin mengerjakannya, dibangunkan rumah di surga (HR. Tirmidzi 473 — hasan).',
+    catatan:
+        'Bacaan dzikir & doa lengkap setelah Dhuha tersedia di menu Dzikir → "Dzikir & Doa Dhuha".',
   ),
 
   // ─────────────────────────── TAHAJUD ───────────────────────────
@@ -88,16 +92,50 @@ const List<SholatSunnah> kSholatSunnah = [
     ),
     tataCara: [
       'Bangun dari tidur, berwudhu, lalu berniat sholat Tahajud.',
-      'Takbiratul ihram dan membaca doa iftitah.',
+      'Iftitah dianjurkan: "Allāhumma lakal-ḥamdu anta nūrus-samāwāti wal-arḍ…" (doa Nabi ﷺ, HR. Bukhari 1120).',
       'Membaca Al-Fatihah dan surat apa saja (boleh memanjangkan bacaan).',
       'Ruku, i\'tidal, dua kali sujud seperti sholat biasa.',
       'Kerjakan rakaat kedua dengan cara yang sama, lalu tasyahud dan salam.',
       'Boleh menambah rakaat (2-2) sesuai kemampuan.',
+      'Setelah salam terakhir: "Subḥānal-malikil-quddūs" 3× (HR. Nasa\'i 1699 — sahih), lalu istighfar 3×.',
+      'Perbanyak doa & munajat — waktu ini Allah turun ke langit dunia (HR. Bukhari 1145, Muslim 758).',
       'Dianjurkan menutup malam dengan sholat Witir.',
-      'Perbanyak doa, istighfar, dan munajat setelahnya.',
     ],
     keutamaan:
-        'Sholat malam adalah kebiasaan orang-orang saleh, sebab dosa diampuni, dan pendekat diri kepada Allah (HR. Tirmidzi). "Dan pada sebagian malam, bertahajudlah…" (QS. Al-Isra: 79).',
+        'Sholat malam adalah kebiasaan orang-orang saleh, sebab dosa diampuni, dan pendekat diri kepada Allah (HR. Tirmidzi 3549). "Dan pada sebagian malam, bertahajudlah…" (QS. Al-Isra: 79).',
+    catatan:
+        'Bacaan iftitah, dzikir, dan doa Nabi ﷺ untuk qiyamul lail tersedia lengkap di menu Dzikir → "Dzikir & Doa Tahajud".',
+  ),
+
+  // ─────────────────────────── WITIR ───────────────────────────
+  SholatSunnah(
+    id: 'witir',
+    title: 'Sholat Witir',
+    rakaat: '1, 3, 5, 7, 9, atau 11 rakaat (ganjil)',
+    waktu:
+        'Setelah Isya hingga sebelum Subuh. Bagi yang biasa bangun malam, paling utama di sepertiga malam terakhir setelah Tahajud',
+    hukum: 'Sunnah muakkad',
+    icon: Icons.nights_stay,
+    niat: NiatDoa(
+      arabic: 'أُصَلِّي سُنَّةَ الْوِتْرِ رَكْعَةً لِلَّهِ تَعَالَى',
+      latin: 'Ushallī sunnatal-witri rak\'atan lillāhi ta\'ālā',
+      translation:
+          'Aku berniat sholat sunnah Witir satu rakaat karena Allah Ta\'ala. (Ganti "rak\'atan" → "ṡalāṡa raka\'āt" untuk 3 rakaat, dst.)',
+    ),
+    tataCara: [
+      'Berniat sholat Witir dengan jumlah rakaat yang diinginkan (minimal 1, paling banyak 11).',
+      'Format 3 rakaat — cara populer: 2 rakaat + salam, lalu 1 rakaat + salam (mengikuti Ibnu \'Umar, HR. Bukhari 991).',
+      'Boleh juga 3 rakaat langsung dengan 1 salam tanpa tasyahud awal (HR. Nasa\'i, Hakim — sahih).',
+      'Rakaat pertama dianjurkan surat Al-A\'lā, kedua Al-Kāfirūn, ketiga (Witir) Al-Ikhlāṣ + Al-Falaq + An-Nās (HR. Tirmidzi 463, Nasa\'i 1729 — sahih).',
+      'Pada rakaat terakhir (setelah ruku\' i\'tidal, sebelum sujud) dianjurkan Doa Qunut Witir — bacaan di bawah.',
+      'Sempurnakan dengan sujud, tasyahud akhir, dan salam.',
+      'Setelah salam baca "Subḥānal-malikil-quddūs" 3× — pada bacaan ketiga suara ditinggikan dan dipanjangkan (HR. Nasa\'i 1699, Abu Dawud 1430 — sahih).',
+      'Doa Qunut Witir: "Allāhummahdinī fīman hadait, wa \'āfinī fīman \'āfait, wa tawallanī fīman tawallait, wa bārik lī fīmā a\'ṭait, wa qinī syarra mā qaḍait, fa innaka taqḍī wa lā yuqḍā \'alaik, wa innahū lā yażillu man wālait, wa lā ya\'izzu man \'ādait, tabārakta rabbanā wa ta\'ālait" — "Ya Allah, tunjukilah aku bersama orang yang Engkau tunjuki, sehatkan aku bersama orang yang Engkau sehatkan, urusi aku bersama orang yang Engkau urusi, berkahi apa yang Engkau berikan, lindungi aku dari kejahatan yang Engkau tetapkan. Sungguh Engkau menetapkan dan tak ada yang bisa menetapkan atas-Mu; tidak akan hina orang yang Engkau tolong, tidak akan mulia orang yang Engkau musuhi. Maha Berkah Engkau, Tuhan kami, dan Maha Tinggi." (HR. Abu Dawud 1425, Tirmidzi 464, Nasa\'i 1745 — sahih dari Al-Ḥasan bin \'Alī).',
+    ],
+    keutamaan:
+        '"Sesungguhnya Allah itu Witir (ganjil) dan menyukai yang ganjil, maka berwitirlah wahai ahli Al-Quran." (HR. Abu Dawud 1416, Tirmidzi 453 — sahih). Nabi ﷺ tidak pernah meninggalkan Witir baik dalam safar maupun mukim (HR. Ahmad, Baihaqi). Witir adalah penutup sholat malam.',
+    catatan:
+        'Kalau khawatir tidak bangun malam, kerjakan Witir sebelum tidur. Kalau yakin bisa bangun, akhirkan setelah Tahajud — itu lebih utama (HR. Muslim 755). Tidak ada dua Witir dalam satu malam (HR. Abu Dawud 1439, Tirmidzi 470 — sahih).',
   ),
 
   // ─────────────────────────── TAUBAT ───────────────────────────

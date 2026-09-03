@@ -235,6 +235,8 @@ class _DesktopTopNavState extends State<DesktopTopNav> {
     '/quran',
     '/dzikir',
     '/sholat-sunnah',
+    '/hadits',
+    '/sirah',
     '/zakat',
     '/sedekah',
   ];
@@ -562,6 +564,8 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
 
   static const List<({IconData icon, String label, String route})> _links = [
     (icon: Icons.menu_book, label: 'Al-Quran', route: '/quran'),
+    (icon: Icons.auto_stories, label: 'Hadits', route: '/hadits'),
+    (icon: Icons.brightness_3, label: 'Sirah Nabawi', route: '/sirah'),
     (icon: Icons.fingerprint, label: 'Dzikir', route: '/dzikir'),
     (icon: Icons.mosque, label: 'Sholat Sunnah', route: '/sholat-sunnah'),
     (icon: Icons.paid, label: 'Zakat', route: '/zakat'),
@@ -612,6 +616,34 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
         );
       case 1:
         return const _MegaPreviewData(
+          icon: Icons.auto_stories,
+          accent: AppColors.caramel,
+          title: 'Hadits',
+          desc: '1000 hadits dari Kutubus Sittah, terjemahan Bahasa Indonesia.',
+          rows: [
+            'Shahih Bukhari · 400',
+            'Shahih Muslim · 300',
+            'Sunan Abu Dawud, Tirmidzi, Nasa\'i, Ibnu Majah',
+          ],
+          cta: 'BUKA HADITS',
+          route: '/hadits',
+        );
+      case 2:
+        return const _MegaPreviewData(
+          icon: Icons.brightness_3,
+          accent: AppColors.coffee,
+          title: 'Sirah Nabawi',
+          desc: 'Perjalanan Rasulullah ﷺ — 20 chapter pendek.',
+          rows: [
+            'Kelahiran di Tahun Gajah',
+            'Wahyu, Hijrah, Badar, Fathu Makkah',
+            'Haji Wada\' & Wafat',
+          ],
+          cta: 'MULAI BACA',
+          route: '/sirah',
+        );
+      case 3:
+        return const _MegaPreviewData(
           icon: Icons.fingerprint,
           accent: AppColors.ochre,
           title: 'Dzikir',
@@ -624,17 +656,17 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
           cta: 'BUKA DZIKIR',
           route: '/dzikir',
         );
-      case 2:
+      case 4:
         return const _MegaPreviewData(
           icon: Icons.mosque,
           accent: AppColors.coffee,
           title: 'Sholat Sunnah',
           desc: 'Niat + tata cara lengkap.',
-          rows: ['Dhuha', 'Tahajud', 'Rawatib'],
+          rows: ['Dhuha', 'Tahajud', 'Rawatib', 'Witir'],
           cta: 'LIHAT PANDUAN',
           route: '/sholat-sunnah',
         );
-      case 3:
+      case 5:
         return const _MegaPreviewData(
           icon: Icons.paid,
           accent: AppColors.goldLight,

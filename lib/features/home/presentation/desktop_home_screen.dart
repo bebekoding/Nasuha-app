@@ -1189,6 +1189,20 @@ class _BentoSecondary extends StatelessWidget {
       route: '/sholat-sunnah',
     ),
     _BentoTileData(
+      icon: Icons.auto_stories,
+      label: 'Hadits',
+      subtitle: 'Kutubus Sittah · 1000',
+      accent: AppColors.taupe,
+      route: '/hadits',
+    ),
+    _BentoTileData(
+      icon: Icons.brightness_3,
+      label: 'Sirah Nabawi',
+      subtitle: 'Kisah Rasulullah ﷺ · 20 chapter',
+      accent: Color(0xFF6E4A2E),
+      route: '/sirah',
+    ),
+    _BentoTileData(
       icon: Icons.explore,
       label: 'Arah Kiblat',
       subtitle: 'Kompas GPS',
@@ -1209,6 +1223,13 @@ class _BentoSecondary extends StatelessWidget {
       accent: AppColors.goldLight,
       route: '/rank',
     ),
+    _BentoTileData(
+      icon: Icons.volunteer_activism,
+      label: 'Sedekah',
+      subtitle: 'Catat & rekap',
+      accent: AppColors.clay,
+      route: '/sedekah',
+    ),
   ];
 
   @override
@@ -1219,7 +1240,7 @@ class _BentoSecondary extends StatelessWidget {
         final tileWidth = (constraints.maxWidth - gap * 2) / 3;
         return Column(
           children: [
-            for (int row = 0; row < 2; row++) ...[
+            for (int row = 0; row < 3; row++) ...[
               if (row > 0) const SizedBox(height: gap),
               Row(
                 children: [

@@ -12,6 +12,11 @@ import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_desktop_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_detail_screen.dart';
 import '../../features/dzikir/presentation/screens/dzikir_screen.dart';
+import '../../features/hadits/presentation/screens/hadits_collection_screen.dart';
+import '../../features/hadits/presentation/screens/hadits_detail_screen.dart';
+import '../../features/hadits/presentation/screens/hadits_screen.dart';
+import '../../features/sirah/presentation/screens/sirah_detail_screen.dart';
+import '../../features/sirah/presentation/screens/sirah_screen.dart';
 import '../../features/home/presentation/desktop_home_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/muhasabah/presentation/screens/muhasabah_desktop_screen.dart';
@@ -153,6 +158,73 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           const DzikirDesktopScreen(),
           const DzikirScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/hadits',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => HaditsScreen(chromeless: c),
+          eyebrow: 'HADITS',
+          currentRoute: '/hadits',
+          maxWidth: 780,
+          bodyIsScrollable: true,
+        ),
+      ),
+      GoRoute(
+        path: '/hadits/:slug',
+        builder: (ctx, state) {
+          final slug = state.pathParameters['slug']!;
+          return _desktopWrapOr(
+            ctx,
+            build: (c) => HaditsCollectionScreen(slug: slug, chromeless: c),
+            eyebrow: 'HADITS',
+            currentRoute: '/hadits',
+            maxWidth: 780,
+            bodyIsScrollable: true,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/hadits/:slug/:num',
+        builder: (ctx, state) {
+          final slug = state.pathParameters['slug']!;
+          final num = int.parse(state.pathParameters['num']!);
+          return _desktopWrapOr(
+            ctx,
+            build: (c) =>
+                HaditsDetailScreen(slug: slug, number: num, chromeless: c),
+            eyebrow: 'HADITS',
+            currentRoute: '/hadits',
+            maxWidth: 780,
+            bodyIsScrollable: true,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/sirah',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => SirahScreen(chromeless: c),
+          eyebrow: 'SIRAH NABAWI',
+          currentRoute: '/sirah',
+          maxWidth: 780,
+          bodyIsScrollable: true,
+        ),
+      ),
+      GoRoute(
+        path: '/sirah/:num',
+        builder: (ctx, state) {
+          final n = int.parse(state.pathParameters['num']!);
+          return _desktopWrapOr(
+            ctx,
+            build: (c) =>
+                SirahDetailScreen(chapterNumber: n, chromeless: c),
+            eyebrow: 'SIRAH NABAWI',
+            currentRoute: '/sirah',
+            maxWidth: 720,
+            bodyIsScrollable: true,
+          );
+        },
       ),
       GoRoute(
         path: '/dzikir/:idx',

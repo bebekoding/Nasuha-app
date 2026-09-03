@@ -317,6 +317,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     onTap: () => context.push('/zakat'),
                   ),
                   _MenuTile(
+                    icon: Icons.auto_stories,
+                    label: 'Hadits',
+                    subtitle: 'Kutubus Sittah',
+                    color: const Color(0xFF8A5A3A),
+                    onTap: () => context.push('/hadits'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.brightness_3,
+                    label: 'Sirah Nabawi',
+                    subtitle: '20 chapter',
+                    color: const Color(0xFF6E4A2E),
+                    onTap: () => context.push('/sirah'),
+                  ),
+                  _MenuTile(
                     icon: Icons.bar_chart,
                     label: AppStrings.analytics,
                     subtitle: 'Statistik',

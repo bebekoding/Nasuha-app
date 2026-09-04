@@ -236,7 +236,6 @@ class _DesktopTopNavState extends State<DesktopTopNav> {
     '/dzikir',
     '/sholat-sunnah',
     '/hadits',
-    '/sirah',
     '/zakat',
     '/sedekah',
   ];
@@ -344,6 +343,12 @@ class _DesktopTopNavState extends State<DesktopTopNav> {
                     onTap: _toggleMega,
                   ),
                 ),
+              ),
+              DesktopNavLink(
+                label: 'Sirah',
+                active: route == '/sirah' ||
+                    (route?.startsWith('/sirah/') ?? false),
+                onTap: () => GoRouter.of(context).push('/sirah'),
               ),
               DesktopNavLink(
                 label: 'Jadwal Sholat',
@@ -565,7 +570,6 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
   static const List<({IconData icon, String label, String route})> _links = [
     (icon: Icons.menu_book, label: 'Al-Quran', route: '/quran'),
     (icon: Icons.auto_stories, label: 'Hadits', route: '/hadits'),
-    (icon: Icons.brightness_3, label: 'Sirah Nabawi', route: '/sirah'),
     (icon: Icons.fingerprint, label: 'Dzikir', route: '/dzikir'),
     (icon: Icons.mosque, label: 'Sholat Sunnah', route: '/sholat-sunnah'),
     (icon: Icons.paid, label: 'Zakat', route: '/zakat'),
@@ -630,20 +634,6 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
         );
       case 2:
         return const _MegaPreviewData(
-          icon: Icons.brightness_3,
-          accent: AppColors.coffee,
-          title: 'Sirah Nabawi',
-          desc: 'Perjalanan Rasulullah ﷺ — 20 chapter pendek.',
-          rows: [
-            'Kelahiran di Tahun Gajah',
-            'Wahyu, Hijrah, Badar, Fathu Makkah',
-            'Haji Wada\' & Wafat',
-          ],
-          cta: 'MULAI BACA',
-          route: '/sirah',
-        );
-      case 3:
-        return const _MegaPreviewData(
           icon: Icons.fingerprint,
           accent: AppColors.ochre,
           title: 'Dzikir',
@@ -656,7 +646,7 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
           cta: 'BUKA DZIKIR',
           route: '/dzikir',
         );
-      case 4:
+      case 3:
         return const _MegaPreviewData(
           icon: Icons.mosque,
           accent: AppColors.coffee,
@@ -666,7 +656,7 @@ class _MegaPanelState extends ConsumerState<_MegaPanel>
           cta: 'LIHAT PANDUAN',
           route: '/sholat-sunnah',
         );
-      case 5:
+      case 4:
         return const _MegaPreviewData(
           icon: Icons.paid,
           accent: AppColors.goldLight,

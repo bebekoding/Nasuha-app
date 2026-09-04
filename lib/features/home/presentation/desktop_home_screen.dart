@@ -16,6 +16,7 @@ import '../../prayer_time/domain/entities/prayer_schedule.dart';
 import '../../rank/data/rank_tiers.dart';
 import '../../rank/presentation/providers/rank_provider.dart';
 import '../../settings/presentation/providers/settings_providers.dart';
+import '../../sirah/presentation/widgets/sirah_progress_card.dart';
 
 /// Dashboard khusus PWA desktop (width ≥ 800px). Layout wide-optimized,
 /// beda dari HomeScreen mobile — inspired by fore.coffee marketing feel +
@@ -108,6 +109,12 @@ class _DesktopHomeScreenState extends ConsumerState<DesktopHomeScreen>
                           prayerAsync: prayerAsync,
                           onTap: () => context.push('/prayer'),
                         ),
+                      ),
+                      const SizedBox(height: 20),
+                      _Reveal(
+                        controller: _entrance,
+                        order: 2,
+                        child: const SirahProgressCard(),
                       ),
                       const SizedBox(height: 64),
                       _Reveal(

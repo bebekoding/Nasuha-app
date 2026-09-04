@@ -20,6 +20,7 @@ import '../../rank/presentation/providers/rank_provider.dart';
 import '../../prayer_time/data/repositories/prayer_repository.dart';
 import '../../prayer_time/domain/entities/prayer_schedule.dart';
 import '../../settings/presentation/providers/settings_providers.dart';
+import '../../sirah/presentation/widgets/sirah_progress_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -232,10 +233,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                 child: _Reveal(
                   controller: _entrance,
                   order: 2,
+                  child: const SirahProgressCard(compact: true),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                child: _Reveal(
+                  controller: _entrance,
+                  order: 3,
                   child: Text(
                     'Menu',
                     style: TextStyle(
@@ -349,11 +360,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   /// Wraps each menu tile in a staggered reveal, continuing the order after
-  /// the cards above the grid (which use orders 0–2).
+  /// the cards above the grid (which use orders 0–3).
   List<Widget> _reveal(List<Widget> tiles) {
     return [
       for (var i = 0; i < tiles.length; i++)
-        _Reveal(controller: _entrance, order: 3 + i, child: tiles[i]),
+        _Reveal(controller: _entrance, order: 4 + i, child: tiles[i]),
     ];
   }
 

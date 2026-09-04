@@ -60,6 +60,42 @@ class _Body extends StatelessWidget {
                   color: scheme.onSurface.withValues(alpha: 0.72),
                 ),
               ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: scheme.surface.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: scheme.outline.withValues(alpha: 0.24),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 15,
+                        color: scheme.onSurface.withValues(alpha: 0.65)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Ringkasan populer untuk pembelajaran. Sebagian '
+                        'detail (tanggal, angka, kisah pendukung) '
+                        'memiliki riwayat variasi — ditandai di dalam '
+                        'teks bila relevan. Untuk kajian mendalam, '
+                        'rujuk kitab asli & bimbingan ustadz.',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11.5,
+                          height: 1.5,
+                          color: scheme.onSurface.withValues(alpha: 0.72),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

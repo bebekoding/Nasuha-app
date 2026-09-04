@@ -85,9 +85,33 @@ class _Body extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Eyebrow: nomor + periode
+          // Eyebrow: tombol daftar + nomor + periode
           Row(
             children: [
+              // Tombol kembali ke daftar bab — dulu tidak ada afford-
+              // ance eksplisit, user hanya bisa prev/next antar chapter.
+              OutlinedButton.icon(
+                onPressed: () => context.go('/sirah'),
+                icon: const Icon(Icons.list_alt, size: 16),
+                label: const Text('Daftar Bab'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: scheme.primary,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  minimumSize: const Size(0, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  side: BorderSide(
+                    color: scheme.primary.withValues(alpha: 0.4),
+                    width: 1.2,
+                  ),
+                  textStyle: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 4),
@@ -96,7 +120,7 @@ class _Body extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'CHAPTER ${chapter.number} / ${kSirahChapters.length}',
+                  '${chapter.number} / ${kSirahChapters.length}',
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontWeight: FontWeight.w800,
@@ -106,18 +130,7 @@ class _Body extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  chapter.period,
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface.withValues(alpha: 0.55),
-                  ),
-                ),
-              ),
+              const Spacer(),
               Icon(Icons.schedule,
                   size: 12, color: scheme.onSurface.withValues(alpha: 0.5)),
               const SizedBox(width: 3),
@@ -130,6 +143,16 @@ class _Body extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            chapter.period,
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface.withValues(alpha: 0.55),
+            ),
           ),
           const SizedBox(height: 10),
           // Bar tipis: proges baca keseluruhan Sirah. Membantu user lihat
@@ -182,6 +205,24 @@ class _Body extends ConsumerWidget {
           ],
           const SizedBox(height: 20),
           _NavRow(index: index),
+          const SizedBox(height: 14),
+          // Link tambahan supaya user selesai baca punya jalan cepat
+          // kembali ke daftar bab tanpa ping-pong prev/next.
+          Center(
+            child: TextButton.icon(
+              onPressed: () => context.go('/sirah'),
+              icon: const Icon(Icons.list_alt, size: 16),
+              label: const Text('Kembali ke Daftar Bab'),
+              style: TextButton.styleFrom(
+                foregroundColor: scheme.primary,
+                textStyle: const TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

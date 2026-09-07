@@ -16,6 +16,7 @@ import '../../features/hadits/presentation/screens/hadits_collection_screen.dart
 import '../../features/hadits/presentation/screens/hadits_detail_screen.dart';
 import '../../features/hadits/presentation/screens/hadits_screen.dart';
 import '../../features/sirah/presentation/screens/sirah_detail_screen.dart';
+import '../../features/sirah/presentation/screens/sirah_notes_screen.dart';
 import '../../features/sirah/presentation/screens/sirah_screen.dart';
 import '../../features/home/presentation/desktop_home_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -206,6 +207,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ctx,
           build: (c) => SirahScreen(chromeless: c),
           eyebrow: 'SIRAH NABAWI',
+          currentRoute: '/sirah',
+          maxWidth: 780,
+          bodyIsScrollable: true,
+        ),
+      ),
+      // NB: /sirah/riwayat harus di-daftar sebelum /sirah/:num supaya
+      // path literal menang match — kalau kebalik, "riwayat" bakal
+      // masuk ke param :num dan int.parse crash.
+      GoRoute(
+        path: '/sirah/riwayat',
+        builder: (ctx, __) => _desktopWrapOr(
+          ctx,
+          build: (c) => SirahNotesScreen(chromeless: c),
+          eyebrow: 'CATATAN RIWAYAT',
           currentRoute: '/sirah',
           maxWidth: 780,
           bodyIsScrollable: true,

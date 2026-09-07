@@ -143,48 +143,92 @@ class _Body extends ConsumerWidget {
                 const SizedBox(height: 10),
                 _ContinueButton(chapterNumber: progress.lastOpened!),
               ],
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: scheme.surface.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: scheme.outline.withValues(alpha: 0.24),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline,
-                        size: 15,
-                        color: scheme.onSurface.withValues(alpha: 0.65)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Ringkasan populer untuk pembelajaran. Sebagian '
-                        'detail (tanggal, angka, kisah pendukung) '
-                        'memiliki riwayat variasi — ditandai di dalam '
-                        'teks bila relevan. Untuk kajian mendalam, '
-                        'rujuk kitab asli & bimbingan ustadz.',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11.5,
-                          height: 1.5,
-                          color: scheme.onSurface.withValues(alpha: 0.72),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
         for (final c in kSirahChapters)
           _ChapterTile(chapter: c, read: progress.isRead(c.number)),
+        const SizedBox(height: 12),
+        const _NotesEntryTile(),
       ],
+    );
+  }
+}
+
+/// Entry menuju halaman Catatan Riwayat — diletakkan setelah chapter 20
+/// supaya tidak mengganggu urutan cerita, tapi tetap discoverable.
+class _NotesEntryTile extends StatelessWidget {
+  const _NotesEntryTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.hardEdge,
+      color: NeoStyle.tint(context, scheme.tertiary, 0.10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: scheme.tertiary.withValues(alpha: 0.42),
+          width: 1.2,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => context.push('/sirah/riwayat'),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: NeoStyle.tint(context, scheme.tertiary, 0.22),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: scheme.tertiary.withValues(alpha: 0.36),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(Icons.menu_book, color: scheme.tertiary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Catatan Riwayat & Sanad',
+                      style: TextStyle(
+                        fontFamily: 'Space Grotesk',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Penjelasan riwayat variasi & sanad untuk '
+                      'yang ingin verifikasi lebih dalam.',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 12.5,
+                        height: 1.4,
+                        color: scheme.onSurface.withValues(alpha: 0.72),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right,
+                  color: scheme.onSurface.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
